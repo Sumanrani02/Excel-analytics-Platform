@@ -1,10 +1,11 @@
 import React from 'react'
+import RoutesPath from './routes/RoutesPath'
 
 const App = () => {
   return (
-    <div>
-      <h1 className='bg-blue-200 text-dark-purple'>hello</h1>
-    </div>
+<>
+<RoutesPath/>
+</>
   )
 }
 
