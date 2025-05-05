@@ -23,19 +23,13 @@ const SignUp = () => {
     try {
       const response = await axios.post("http://localhost:5000/api/auth/register", data);
 
-      // Save the role to localStorage
-      const { role } = response.data.data;
-      localStorage.setItem("role", role);
-
-      // Navigate to the appropriate homepage
-      if (role === "admin") {
-        navigate("/admin/home");
-      } else {
-        navigate("/");
-      }
-
-      setMessage(response.data.msg); // Success message from API
+      setMessage(response.data.msg || "User registered successfully.");
       reset();
+
+      // Wait for 1.5s before navigating to login
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     } catch (err) {
       setError(err.response?.data?.msg || "Something went wrong. Please try again.");
     }
@@ -61,15 +55,12 @@ const SignUp = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-600"
-            >
+            <label htmlFor="name" className="block text-sm font-medium text-gray-600">
               Full Name
             </label>
             <input
               type="text"
-              id="name"
+              id="username"
               {...register("name", { required: "Name is required" })}
               className="mt-1 w-full rounded-lg border-gray-300 p-2 shadow-sm focus:border-green-500 focus:ring-green-500"
               placeholder="Enter your full name"
@@ -78,11 +69,9 @@ const SignUp = () => {
               <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
             )}
           </div>
+
           <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-600"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-600">
               Email address
             </label>
             <input
@@ -96,11 +85,9 @@ const SignUp = () => {
               <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
             )}
           </div>
+
           <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-600"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-600">
               Password
             </label>
             <input
@@ -112,12 +99,6 @@ const SignUp = () => {
                   value: 8,
                   message: "Password must be at least 8 characters",
                 },
-                // pattern: {
-                //   value:
-                //     /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                //   message:
-                //     "Password must include uppercase, number, and special character",
-                // },
               })}
               className="mt-1 w-full rounded-lg border-gray-300 p-2 shadow-sm focus:border-green-500 focus:ring-green-500"
               placeholder="Enter your password"
@@ -126,11 +107,13 @@ const SignUp = () => {
               <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
             )}
           </div>
+
           <Button type="submit">Sign Up</Button>
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <NavLink to={"/login"} className="text-green-600 hover:underline">
+          <NavLink to={"/"} className="text-green-600 hover:underline">
             Login
           </NavLink>
         </p>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const DashBoard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Dashboard");
 
   const handleTabClick = (tabName) => {
@@ -99,9 +101,9 @@ const DashBoard = () => {
         {/* Header */}
         <div className="flex justify-between items-center bg-white shadow p-4">
           <h1 className="text-xl font-semibold">Welcome {userName}!</h1>
-
+ 
           <NavLink
-            to="/login"
+            to="/"
             onClick={() => {
                 localStorage.removeItem("token");
                 localStorage.removeItem("role");
@@ -111,6 +113,7 @@ const DashBoard = () => {
           >
             Log Out
           </NavLink>
+     
         </div>
 
         {/* Content */}

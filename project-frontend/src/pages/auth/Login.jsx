@@ -14,32 +14,39 @@ const Login = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  
+
   const onSubmit = async (data) => {
     setMessage("");
     setError("");
-  
+
     try {
       const response = await axios.post("http://localhost:5000/api/auth/login", data);
-  
+
+      // Extract token and user from response
+      const { token, user } = response.data;
+      const { role, name } = user;
+
       // Save token, role, and user name in localStorage
-      const { token, role, user } = response.data.data;
       localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("userName", user.name); // Save the user's name
-  
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("name", user.name);
+
       // Redirect based on role
-      if (role === "admin") {
+      if (user.role === "admin") {
+        setMessage("Login successful");
         navigate("/admin/home");
       } else {
-        navigate("/");
+        navigate("/dashboard");
+        setMessage("Login successful");
+
+
       }
+
   
-      setMessage(response.data.msg); // Display success message
     } catch (err) {
       setError(err.response?.data?.msg || "Invalid email or password. Please try again.");
     }
-  };  
+  };
 
   return (
     <Card>
@@ -100,3 +107,4 @@ const Login = () => {
 };
 
 export default Login;
+
