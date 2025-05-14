@@ -30,4 +30,6 @@ app.use('/api/auth', authRoutes);
 
 const dashboardRoutes = require('./routes/dashboard');
 app.use('/api/dashboard', dashboardRoutes); // <<< FIXED here
+const fileRoutes = require('./routes/fileRoutes');
+app.use('/api/files', fileRoutes);
 const PORT = process.env.PORT || 5000;

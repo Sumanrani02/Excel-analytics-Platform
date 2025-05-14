@@ -1,6 +1,7 @@
 // src/routes/RoutesPath.jsx
 import React from "react";
 import { Route, Routes } from "react-router-dom";
+import Home from "../pages/auth/Home"
 import Login from "../pages/auth/Login";
 import SignUp from "../pages/auth/SignUp";
 import DashBoard from "../pages/dashboard/DashBoard";
@@ -10,7 +11,8 @@ import PrivateRoute from "./PrivateRoute";
 const RoutesPath = () => {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<SignUp />} />
       
       <Route
