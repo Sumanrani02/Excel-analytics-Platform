@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const checkRole = require('../middleware/checkRole');
+import express from 'express';
+import auth from '../middleware/auth.js';
+import checkRole from '../middleware/checkRole.js';
 
+const router = express.Router();
 
 // Admin-only route
 router.get('/admin', auth, checkRole('admin'), (req, res) => {
@@ -19,5 +19,4 @@ router.get('/user', auth, checkRole('user'), (req, res) => {
   });
 });
 
-module.exports = router;
-
+export default router;
