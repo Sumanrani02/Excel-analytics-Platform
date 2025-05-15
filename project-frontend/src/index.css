@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
+
 @theme {
 	--color-dark-purple: #ffffff;
 
 }
 
+
 @font-face {
 	font-family: "PP Telegraf";
 	src: url("/assets/fonts/pp-telegraf-regular.otf") format("opentype");
+}
+
+*{
+	overflow: hidden;
 }

@@ -5,8 +5,9 @@ import Home from "../pages/auth/Home"
 import Login from "../pages/auth/Login";
 import SignUp from "../pages/auth/SignUp";
 import DashBoard from "../pages/dashboard/DashBoard";
-import AdminHomePage from "../adminpannel/AdminHomePage";
+import AdminHomePage from "../pages/admin/AdminHomePage";
 import PrivateRoute from "./PrivateRoute";
+import UploadFiles from "../pages/dashboard/UploadFiles";
 
 const RoutesPath = () => {
   return (
@@ -21,6 +22,12 @@ const RoutesPath = () => {
           <PrivateRoute>
             <DashBoard />
           </PrivateRoute>
+        }
+      />
+       <Route
+        path="/upload/files"
+        element={
+            <UploadFiles />
         }
       />
       <Route
