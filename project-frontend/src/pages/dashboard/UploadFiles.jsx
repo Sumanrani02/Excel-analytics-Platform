@@ -35,18 +35,25 @@ const UploadFiles = () => {
         formData.append("file", updatedFiles[i].file);
 
         try {
-          const response = await axios.post(
-            "http://localhost:5000/api/upload",
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-            }
+          const token = localStorage.getItem('token'); // or wherever you store it
+
+const response = await axios.post(
+  "http://localhost:5000/api/files/upload",
+  formData,
+  {
+    headers: { 
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  }
+
           );
           updatedFiles[i].status = "uploaded";
           updatedFiles[i].response = response.data;
         } catch (err) {
           console.error(err);
           updatedFiles[i].status = "error";
+          setError("Failed to upload one or more files.");
         }
       }
     }
@@ -75,7 +82,6 @@ const UploadFiles = () => {
   return (
     <div className="min-h-screen p-6 bg-green-100 flex flex-col items-center">
       <div className="bg-white w-full max-w-5xl p-6 shadow-md rounded-lg">
-        {/* Header */}
         <h1 className="text-3xl font-semibold text-green-600 mb-5 text-center">
           Upload Excel Files
         </h1>
@@ -84,7 +90,6 @@ const UploadFiles = () => {
           click the button below to browse.
         </p>
 
-        {/* File Upload Area */}
         <div className="flex flex-col md:flex-row gap-8 justify-between items-center">
           <div className="border-2 border-dashed border-green-400 rounded-lg p-6 flex flex-col items-center w-full md:w-1/3 bg-green-50">
             <UploadCloud size={50} className="text-green-600" />
@@ -107,32 +112,12 @@ const UploadFiles = () => {
                 height={20}
                 viewBox="0 0 50 50"
               >
-                <path
-                  d="M28.8125 .03125L.8125 5.34375C.339844 
-          5.433594 0 5.863281 0 6.34375L0 43.65625C0 
-          44.136719 .339844 44.566406 .8125 44.65625L28.8125 
-          49.96875C28.875 49.980469 28.9375 50 29 50C29.230469 
-          50 29.445313 49.929688 29.625 49.78125C29.855469 49.589844 
-          30 49.296875 30 49L30 1C30 .703125 29.855469 .410156 29.625 
-          .21875C29.394531 .0273438 29.105469 -.0234375 28.8125 .03125ZM32 
-          6L32 13L34 13L34 15L32 15L32 20L34 20L34 22L32 22L32 27L34 27L34 
-          29L32 29L32 35L34 35L34 37L32 37L32 44L47 44C48.101563 44 49 
-          43.101563 49 42L49 8C49 6.898438 48.101563 6 47 6ZM36 13L44 
-          13L44 15L36 15ZM6.6875 15.6875L11.8125 15.6875L14.5 21.28125C14.710938 
-          21.722656 14.898438 22.265625 15.0625 22.875L15.09375 22.875C15.199219 
-          22.511719 15.402344 21.941406 15.6875 21.21875L18.65625 15.6875L23.34375 
-          15.6875L17.75 24.9375L23.5 34.375L18.53125 34.375L15.28125 
-          28.28125C15.160156 28.054688 15.035156 27.636719 14.90625 
-          27.03125L14.875 27.03125C14.8125 27.316406 14.664063 27.761719 
-          14.4375 28.34375L11.1875 34.375L6.1875 34.375L12.15625 25.03125ZM36 
-          20L44 20L44 22L36 22ZM36 27L44 27L44 29L36 29ZM36 35L44 35L44 37L36 37Z"
-                />
+                <path d="M28.8125 .03125L.8125 5.34375C.339844 5.433594 0 5.863281 0 6.34375L0 43.65625C0 44.136719 .339844 44.566406 .8125 44.65625L28.8125 49.96875C28.875 49.980469 28.9375 50 29 50C29.230469 50 29.445313 49.929688 29.625 49.78125C29.855469 49.589844 30 49.296875 30 49L30 1C30 .703125 29.855469 .410156 29.625 .21875C29.394531 .0273438 29.105469 -.0234375 28.8125 .03125ZM32 6L32 13L34 13L34 15L32 15L32 20L34 20L34 22L32 22L32 27L34 27L34 29L32 29L32 35L34 35L34 37L32 37L32 44L47 44C48.101563 44 49 43.101563 49 42L49 8C49 6.898438 48.101563 6 47 6ZM36 13L44 13L44 15L36 15ZM6.6875 15.6875L11.8125 15.6875L14.5 21.28125C14.710938 21.722656 14.898438 22.265625 15.0625 22.875L15.09375 22.875C15.199219 22.511719 15.402344 21.941406 15.6875 21.21875L18.65625 15.6875L23.34375 15.6875L17.75 24.9375L23.5 34.375L18.53125 34.375L15.28125 28.28125C15.160156 28.054688 15.035156 27.636719 14.90625 27.03125L14.875 27.03125C14.8125 27.316406 14.664063 27.761719 14.4375 28.34375L11.1875 34.375L6.1875 34.375L12.15625 25.03125ZM36 20L44 20L44 22L36 22ZM36 27L44 27L44 29L36 29ZM36 35L44 35L44 37L36 37Z" />
               </svg>
               Browse Files
             </label>
           </div>
 
-          {/* Files List */}
           <div className="w-full md:w-2/3">
             {files.length > 0 ? (
               <ul className="space-y-4">
@@ -144,9 +129,7 @@ const UploadFiles = () => {
                     <div className="flex items-center">
                       {getStatusIcon(file.status)}
                       <div className="ml-4">
-                        <p className="font-semibold text-green-800">
-                          {file.name}
-                        </p>
+                        <p className="font-semibold text-green-800">{file.name}</p>
                         <p className="text-sm text-gray-500">{file.size}</p>
                       </div>
                     </div>
@@ -167,16 +150,13 @@ const UploadFiles = () => {
           </div>
         </div>
 
-        {/* Upload Button */}
         {files.length > 0 && (
           <div className="flex justify-center mt-6">
             <button
               onClick={handleUpload}
               disabled={uploading}
               className={`bg-green-600 text-white px-6 py-2 rounded-md ${
-                uploading
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-green-700"
+                uploading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"
               }`}
             >
               {uploading ? "Uploading..." : "Upload Files"}
@@ -184,7 +164,6 @@ const UploadFiles = () => {
           </div>
         )}
 
-        {/* Error Message */}
         {error && (
           <p className="mt-4 text-center text-red-500 font-medium">{error}</p>
         )}
@@ -194,179 +173,3 @@ const UploadFiles = () => {
 };
 
 export default UploadFiles;
-
-// import { useState } from "react";
-// import axios from "axios";
-// import SideBar from "../../components/SideBar";
-// import UploadBtn from "../../components/UploadBtn";
-// import {
-//   UploadCloud,
-//   CheckCircle,
-//   XCircle,
-//   FileText,
-//   Trash,
-// } from "lucide-react";
-
-// const UploadFiles = () => {
-//   const [files, setFiles] = useState([]);
-//   const [uploading, setUploading] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const handleFileChange = (e) => {
-//     const selectedFiles = Array.from(e.target.files);
-//     const updatedFiles = selectedFiles.map((file) => ({
-//       file,
-//       name: file.name,
-//       size: `${(file.size / 1024).toFixed(2)} KB`,
-//       status: "pending",
-//     }));
-//     setFiles((prevFiles) => [...prevFiles, ...updatedFiles]);
-//     setError("");
-//   };
-
-//   const handleUpload = async () => {
-//     setUploading(true);
-//     const updatedFiles = [...files];
-
-//     for (let i = 0; i < updatedFiles.length; i++) {
-//       if (updatedFiles[i].status === "pending") {
-//         const formData = new FormData();
-//         formData.append("file", updatedFiles[i].file);
-
-//         try {
-//           const response = await axios.post(
-//             "http://localhost:5000/api/upload",
-//             formData,
-//             {
-//               headers: { "Content-Type": "multipart/form-data" },
-//             }
-//           );
-//           updatedFiles[i].status = "uploaded"; // Mark file as uploaded
-//           updatedFiles[i].response = response.data; // Store response data
-//         } catch (err) {
-//           console.error(err);
-//           updatedFiles[i].status = "error"; // Mark file as error
-//         }
-//       }
-//     }
-
-//     setFiles(updatedFiles);
-//     setUploading(false);
-//   };
-
-//   const handleFileRemove = (index) => {
-//     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-//   };
-
-//   const getStatusIcon = (status) => {
-//     switch (status) {
-//       case "uploaded":
-//         return <CheckCircle className="text-green-500" />;
-//       case "pending":
-//         return <FileText className="text-yellow-500" />;
-//       case "error":
-//         return <XCircle className="text-red-500" />;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   return (
-//     <>
-//       <div className="h-screen p-6 w-full flex flex-col bg-green-100 overflow-y-auto">
-//         <h1 className="text-2xl font-semibold mb-4 text-green-900 bg-green-50 p-4">
-//           Upload Excel File
-//         </h1>
-//         <div className="shadow-md rounded-lg overflow-hidden bg-green-50 p-6 mt-4">
-//           <div className="flex flex-col md:flex-row justify-center items-center gap-24 ">
-//             <div className="flex flex-col items-center border-2 rounded-md border-dotted p-10 text-green-500 mb-6 md:mb-0 md:mr-6">
-//               <UploadCloud size={50} />
-//               <p className="text-lg mt-2">Drag and Drop file</p>
-//               <input
-//                 type="file"
-//                 multiple
-//                 className="hidden"
-//                 id="file-upload"
-//                 onChange={handleFileChange}
-//               />
-//               <label
-//                 htmlFor="file-upload"
-//                 className="bg-green-600 cursor-pointer text-white px-6 py-2 rounded-md flex gap-3 items-center mt-5"
-//               >
-//                 <svg
-//                   fill="#fff"
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   width={20}
-//                   height={20}
-//                   viewBox="0 0 50 50"
-//                 >
-//                   <path
-//                     d="M28.8125 .03125L.8125 5.34375C.339844
-//           5.433594 0 5.863281 0 6.34375L0 43.65625C0
-//           44.136719 .339844 44.566406 .8125 44.65625L28.8125
-//           49.96875C28.875 49.980469 28.9375 50 29 50C29.230469
-//           50 29.445313 49.929688 29.625 49.78125C29.855469 49.589844
-//           30 49.296875 30 49L30 1C30 .703125 29.855469 .410156 29.625
-//           .21875C29.394531 .0273438 29.105469 -.0234375 28.8125 .03125ZM32
-//           6L32 13L34 13L34 15L32 15L32 20L34 20L34 22L32 22L32 27L34 27L34
-//           29L32 29L32 35L34 35L34 37L32 37L32 44L47 44C48.101563 44 49
-//           43.101563 49 42L49 8C49 6.898438 48.101563 6 47 6ZM36 13L44
-//           13L44 15L36 15ZM6.6875 15.6875L11.8125 15.6875L14.5 21.28125C14.710938
-//           21.722656 14.898438 22.265625 15.0625 22.875L15.09375 22.875C15.199219
-//           22.511719 15.402344 21.941406 15.6875 21.21875L18.65625 15.6875L23.34375
-//           15.6875L17.75 24.9375L23.5 34.375L18.53125 34.375L15.28125
-//           28.28125C15.160156 28.054688 15.035156 27.636719 14.90625
-//           27.03125L14.875 27.03125C14.8125 27.316406 14.664063 27.761719
-//           14.4375 28.34375L11.1875 34.375L6.1875 34.375L12.15625 25.03125ZM36
-//           20L44 20L44 22L36 22ZM36 27L44 27L44 29L36 29ZM36 35L44 35L44 37L36 37Z"
-//                   />
-//                 </svg>
-//                 Browse Files
-//               </label>
-//             </div>
-
-//             <div className="w-full md:w-1/2 bg-white rounded-lg shadow-md p-4 ">
-//               <ul className="space-y-4">
-//                 {files.map((file, index) => (
-//                   <li
-//                     key={index}
-//                     className="flex items-center justify-between border border-green-300 rounded-lg px-4 py-2 shadow-sm"
-//                   >
-//                     <div className="flex items-center">
-//                       {getStatusIcon(file.status)}
-//                       <div className="ml-4">
-//                         <p className="font-medium text-green-800">
-//                           {file.name}
-//                         </p>
-//                         <p className="text-sm text-green-500">{file.size}</p>
-//                       </div>
-//                     </div>
-//                     {file.status !== "uploaded" && (
-//                       <button
-//                         onClick={() => handleFileRemove(index)}
-//                         className="text-red-500 hover:text-red-700"
-//                       >
-//                         <Trash />
-//                       </button>
-//                     )}
-//                   </li>
-//                 ))}
-//               </ul>
-
-//               {files.length > 0 && (
-//                 <button
-//                   onClick={handleUpload}
-//                   disabled={uploading}
-//                   className="bg-green-600 text-white cursor-pointer px-6 py-2 rounded-md  mt-5"
-//                 >
-//                   {uploading ? "Uploading..." : "Upload Files"}
-//                 </button>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-// export default UploadFiles;

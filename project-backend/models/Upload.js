@@ -5,8 +5,7 @@ const uploadSchema = new mongoose.Schema({
   filename: String,
   originalname: String,
   data: [{}], // Parsed Excel rows
-  uploadedAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true }); // Adds createdAt and updatedAt automatically
 
 const Upload = mongoose.model('Upload', uploadSchema);
 export default Upload;
