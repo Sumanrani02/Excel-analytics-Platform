@@ -1,82 +1,20 @@
-import { useState } from "react";
-import axios from "axios";
-import {
-  UploadCloud,
-  CheckCircle,
-  XCircle,
-  FileText,
-  Trash,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { UploadCloud, Trash } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const UploadFiles = () => {
-  const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    const updatedFiles = selectedFiles.map((file) => ({
-      file,
-      name: file.name,
-      size: `${(file.size / 1024).toFixed(2)} KB`,
-      status: "pending",
-    }));
-    setFiles((prevFiles) => [...prevFiles, ...updatedFiles]);
-    setError("");
-  };
-
-  const handleUpload = async () => {
-    setUploading(true);
-    const updatedFiles = [...files];
-
-    for (let i = 0; i < updatedFiles.length; i++) {
-      if (updatedFiles[i].status === "pending") {
-        const formData = new FormData();
-        formData.append("file", updatedFiles[i].file);
-
-        try {
-          const token = localStorage.getItem('token'); // or wherever you store it
-
-const response = await axios.post(
-  "http://localhost:5000/api/files/upload",
-  formData,
-  {
-    headers: { 
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-          );
-          updatedFiles[i].status = "uploaded";
-          updatedFiles[i].response = response.data;
-        } catch (err) {
-          console.error(err);
-          updatedFiles[i].status = "error";
-          setError("Failed to upload one or more files.");
-        }
-      }
-    }
-
-    setFiles(updatedFiles);
-    setUploading(false);
-  };
+  const {
+    newfiles,
+    setNewfiles,
+    handlebrowse,
+    getStatusIcon,
+    uploading,
+    handleUpload,
+    error,
+  } = useAuth();
 
   const handleFileRemove = (index) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "uploaded":
-        return <CheckCircle className="text-green-500" />;
-      case "pending":
-        return <FileText className="text-yellow-500" />;
-      case "error":
-        return <XCircle className="text-red-500" />;
-      default:
-        return null;
-    }
+    setNewfiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
   return (
@@ -99,7 +37,7 @@ const response = await axios.post(
               multiple
               className="hidden"
               id="file-upload"
-              onChange={handleFileChange}
+              onChange={handlebrowse}
             />
             <label
               htmlFor="file-upload"
@@ -117,11 +55,10 @@ const response = await axios.post(
               Browse Files
             </label>
           </div>
-
           <div className="w-full md:w-2/3">
-            {files.length > 0 ? (
+            {newfiles.length > 0 ? (
               <ul className="space-y-4">
-                {files.map((file, index) => (
+                {newfiles.map((file, index) => (
                   <li
                     key={index}
                     className="flex justify-between items-center bg-green-50 p-4 rounded-md shadow"
@@ -129,7 +66,9 @@ const response = await axios.post(
                     <div className="flex items-center">
                       {getStatusIcon(file.status)}
                       <div className="ml-4">
-                        <p className="font-semibold text-green-800">{file.name}</p>
+                        <p className="font-semibold text-green-800">
+                          {file.name}
+                        </p>
                         <p className="text-sm text-gray-500">{file.size}</p>
                       </div>
                     </div>
@@ -150,13 +89,15 @@ const response = await axios.post(
           </div>
         </div>
 
-        {files.length > 0 && (
+        {newfiles.length > 0 && (
           <div className="flex justify-center mt-6">
             <button
               onClick={handleUpload}
               disabled={uploading}
               className={`bg-green-600 text-white px-6 py-2 rounded-md ${
-                uploading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"
+                uploading
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-green-700"
               }`}
             >
               {uploading ? "Uploading..." : "Upload Files"}

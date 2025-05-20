@@ -1,45 +1,20 @@
-import { useEffect, useState } from "react";
 import axios from "axios";
-import { Eye, Download, Trash, CheckCircle } from "lucide-react";
+import { CheckCircle, Download, Eye, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import Visualize from "./Visualize";
+import { useAuth } from "../../context/AuthContext";
 
 const History = () => {
-  const [files, setFiles] = useState([]);
-  const [filteredFiles, setFilteredFiles] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const token = localStorage.getItem("token"); // assuming JWT
-        const res = await axios.get("http://localhost:5000/api/files/history", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setFiles(res.data);
-        setFilteredFiles(res.data);
-      } catch (err) {
-        console.error("Error fetching history:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHistory();
-  }, []);
-
-  const handleSearch = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    setFilteredFiles(
-      files.filter((file) =>
-        file.originalname.toLowerCase().includes(query)
-      )
-    );
-  };
-
-  const getStatusIcon = () => <CheckCircle className="text-green-500" />;
+  const {
+    filteredFiles,
+    searchQuery,
+    loading,
+    handleSearch,
+    handleView,
+    handleDownload,
+    handleDelete,
+    getStatusIcon
+  } = useAuth();
 
   return (
     <div className="min-h-screen p-6 bg-green-100">
@@ -59,39 +34,58 @@ const History = () => {
         {loading ? (
           <p className="text-center text-gray-500">Loading file history...</p>
         ) : filteredFiles.length > 0 ? (
-          <table className="table-auto w-full border-collapse border border-gray-300">
-            <thead className="bg-gray-100">
+          <table className="table-auto w-full border-collapse border border-green-300">
+            <thead className="bg-green-100">
               <tr>
-                <th className="border border-gray-300 px-4 py-2">File Name</th>
-                <th className="border border-gray-300 px-4 py-2">Rows</th>
-                <th className="border border-gray-300 px-4 py-2">Status</th>
-                <th className="border border-gray-300 px-4 py-2">Uploaded At</th>
-                <th className="border border-gray-300 px-4 py-2">Actions</th>
+                <th className="border border-green-300 px-4 py-2 text-green-500">
+                  File Name
+                </th>
+                <th className="border border-green-300 px-4 py-2 text-green-500">
+                  Rows
+                </th>
+                <th className="border border-green-300 px-4 py-2 text-green-500">
+                  Status
+                </th>
+                <th className="border border-green-300 px-4 py-2 text-green-500">
+                  Uploaded At
+                </th>
+                <th className="border border-green-300 px-4 py-2 text-green-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredFiles.map((file) => (
                 <tr key={file._id} className="text-gray-700">
-                  <td className="border border-gray-300 px-4 py-2">
+                  <td className="border border-green-300 px-4 py-2">
                     {file.originalname}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
+                  <td className="border border-green-300 px-4 py-2">
                     {file.data.length}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {getStatusIcon()}
+                  <td className="border border-green-300 px-4 py-2">
+                    {getStatusIcon('uploaded')}
                   </td>
-                   <td className="border border-gray-300 px-4 py-2">
+                  <td className="border border-green-300 px-4 py-2">
                     {new Date(file.createdAt).toLocaleString()}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 flex gap-2">
-                    <button className="text-green-500 hover:text-green-700">
+                  <td className="border border-green-300 px-4 py-2 flex gap-2">
+                    <button
+                      onClick={() => handleView(file._id)}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
                       <Eye />
                     </button>
-                    <button className="text-green-500 hover:text-green-700">
+                    <button
+                      onClick={() => handleDownload(file._id)}
+                      className="text-green-500 hover:text-green-700"
+                    >
                       <Download />
                     </button>
-                    <button className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => handleDelete(file._id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
                       <Trash />
                     </button>
                   </td>
@@ -103,6 +97,7 @@ const History = () => {
           <p className="text-center text-gray-500">No files found.</p>
         )}
       </div>
+      {!loading && <Visualize files={filteredFiles} loading={loading} />}
     </div>
   );
 };

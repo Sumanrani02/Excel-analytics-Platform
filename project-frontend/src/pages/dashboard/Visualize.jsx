@@ -1,18 +1,82 @@
-import React from 'react'
+import React from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { useAuth } from "../../context/AuthContext";
+
+// Register required Chart.js components
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const Visualize = () => {
+  const { files, loading } = useAuth();
+  console.log("Received files in Visualize:", files);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (files.length === 0) {
+    return <p>No data available for visualization.</p>;
+  }
+
+  // Prepare data for the chart
+  const data = {
+    labels: files.map((file) => file.originalname || "Unknown File"),
+    datasets: [
+      {
+        label: "Number of Rows",
+        data: files.map((file) => (file.data ? file.data.length : 0)), // Safely check for data
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: "File Names",
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Number of Rows",
+        },
+        beginAtZero: true,
+      },
+    },
+  };
+
   return (
-    <div>
-      visualization
+    <div className="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto mt-8">
+      <h2 className="text-xl font-bold text-green-600 mb-4">
+        File Data Visualization
+      </h2>
+      <Bar data={data} options={options} />
     </div>
-  )
-}
+  );
+};
 
-export default Visualize
-
-
-
-
+export default Visualize;
 
 // import { useEffect, useState } from "react";
 // import { Doughnut, Bar, Line, Pie } from "react-chartjs-2";

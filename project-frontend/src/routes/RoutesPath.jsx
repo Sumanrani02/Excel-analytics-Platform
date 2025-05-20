@@ -20,7 +20,6 @@ const RoutesPath = () => {
 
   return (
     <div className="flex w-full">
-
       {!noSidebarRoutes.includes(location.pathname) && (
         <div className="w-1/5">
           <SideBar />
@@ -30,7 +29,9 @@ const RoutesPath = () => {
       {/* Main content */}
       <div
         className={`${
-          noSidebarRoutes.includes(location.pathname) ? "w-full" : "w-4/5 ml-1/5"
+          noSidebarRoutes.includes(location.pathname)
+            ? "w-full"
+            : "w-4/5 ml-1/5"
         }`}
       >
         <Routes>
@@ -38,7 +39,6 @@ const RoutesPath = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SignUp />} />
-
 
           {/* Protected Routes */}
           <Route

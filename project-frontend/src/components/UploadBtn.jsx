@@ -1,19 +1,19 @@
-import React from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
 
 const UploadBtn = () => {
-  const token = localStorage.getItem('token'); // assuming token is stored here
+  const token = localStorage.getItem("token"); // assuming token is stored here
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('file', file); // name must match backend
+    formData.append("file", file); // name must match backend
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
-        method: 'POST',
+      const res = await fetch("http://localhost:5000/api/upload", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,12 +38,23 @@ const UploadBtn = () => {
     <StyledWrapper>
       <div>
         <button className="container-btn-file">
-          <svg fill="#fff" xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 50 50">
+          <svg
+            fill="#fff"
+            xmlns="http://www.w3.org/2000/svg"
+            width={20}
+            height={20}
+            viewBox="0 0 50 50"
+          >
             <path d="..." />
           </svg>
           Upload File
         </button>
-        <input className="file" name="file" type="file" onChange={handleFileChange} />
+        <input
+          className="file"
+          name="file"
+          type="file"
+          onChange={handleFileChange}
+        />
       </div>
     </StyledWrapper>
   );

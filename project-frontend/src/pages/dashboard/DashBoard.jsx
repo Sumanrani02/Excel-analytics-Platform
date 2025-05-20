@@ -1,46 +1,22 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 import { Doughnut } from "react-chartjs-2";
 import SideBar from "../../components/SideBar";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
-  const [summary, setSummary] = useState({});
-  const [recentUploads, setRecentUploads] = useState([]);
-  const [chartData, setChartData] = useState(null);
-  const [userName, setUserName] = useState("User"); // Replace with dynamic username if available
-  const [loading, setLoading] = useState(true);
+  const {
+    summary,
+    recentUploads,
+    chartData,
+    userName,
+    loading,
+    fetchDashboardData,
+  } = useAuth();
 
-
- useEffect(() => {
-    const storedName = localStorage.getItem("userName");
-    if (storedName) {
-      setUserName(storedName);
-    }
-  }, []);
-
-  // Fetch dashboard data from backend
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [summaryRes, recentUploadsRes, chartDataRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/dashboard/summary"),
-          axios.get("http://localhost:5000/api/dashboard/recent-uploads"),
-          axios.get("http://localhost:5000/api/dashboard/chart-data"),
-        ]);
-
-        setSummary(summaryRes.data);
-        setRecentUploads(recentUploadsRes.data);
-        setChartData(chartDataRes.data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   // Chart configuration
   const doughnutChartData = chartData
@@ -60,9 +36,11 @@ const Dashboard = () => {
       <SideBar />
       <div className="p-6 flex-1 bg-green-50 h-screen">
         <div className="flex justify-between items-center rounded-2xl bg-white shadow p-4 mb-5">
-         <h1 className="text-2xl text-green-800 font-semibold">Welcome {userName}!</h1>
+          <h1 className="text-2xl text-green-800 font-semibold">
+            Welcome {userName}!
+          </h1>
 
-         <NavLink
+          <NavLink
             to="/"
             onClick={() => {
               localStorage.removeItem("token");
@@ -75,7 +53,6 @@ const Dashboard = () => {
           </NavLink>
         </div>
 
-
         {loading ? (
           <p>Loading dashboard...</p>
         ) : (
@@ -83,34 +60,52 @@ const Dashboard = () => {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-                <p className="text-2xl font-bold text-blue-600">{summary.totalFiles}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {summary.totalFiles}
+                </p>
                 <p className="text-sm text-gray-600">Total Files Uploaded</p>
               </div>
               <div className="bg-green-100 p-4 rounded-lg shadow-md">
-                <p className="text-2xl font-bold text-green-600">{summary.successfulUploads}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {summary.successfulUploads}
+                </p>
                 <p className="text-sm text-gray-600">Successful Uploads</p>
               </div>
               <div className="bg-red-100 p-4 rounded-lg shadow-md">
-                <p className="text-2xl font-bold text-red-600">{summary.failedUploads}</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {summary.failedUploads}
+                </p>
                 <p className="text-sm text-gray-600">Failed Uploads</p>
               </div>
             </div>
 
             {/* Recent Uploads Table */}
-            <h2 className="text-xl font-semibold text-green-800 mb-4">Recent Uploads</h2>
+            <h2 className="text-xl font-semibold text-green-800 mb-4">
+              Recent Uploads
+            </h2>
             <table className="table-auto w-full border-collapse border border-gray-300">
               <thead className="bg-green-200">
                 <tr>
-                  <th className="border border-green-300 text-teal-800 px-4 py-2">File Name</th>
-                  <th className="border border-green-300 text-teal-800 px-4 py-2">Date</th>
-                  <th className="border border-green-300 text-teal-800 px-4 py-2">Status</th>
+                  <th className="border border-green-300 text-teal-800 px-4 py-2">
+                    File Name
+                  </th>
+                  <th className="border border-green-300 text-teal-800 px-4 py-2">
+                    Date
+                  </th>
+                  <th className="border border-green-300 text-teal-800 px-4 py-2">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {recentUploads.map((upload, index) => (
                   <tr key={index} className="text-green-900">
-                    <td className="border border-gray-300 px-4 py-2">{upload.name}</td>
-                    <td className="border border-gray-300 px-4 py-2">{upload.date}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {upload.name}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {upload.date}
+                    </td>
                     <td
                       className={`border border-gray-300 px-4 py-2 ${
                         upload.status === "uploaded"
@@ -127,7 +122,9 @@ const Dashboard = () => {
 
             {/* Charts */}
             <div className="mt-6">
-              <h2 className="text-xl font-semibold text-green-800 mb-4">Upload Status</h2>
+              <h2 className="text-xl font-semibold text-green-800 mb-4">
+                Upload Status
+              </h2>
               {doughnutChartData ? (
                 <Doughnut data={doughnutChartData} />
               ) : (
@@ -142,15 +139,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
-
-
-
-
-
-
-
-
-
