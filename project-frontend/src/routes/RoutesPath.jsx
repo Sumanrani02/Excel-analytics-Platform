@@ -13,6 +13,7 @@ import Visualize from "../pages/dashboard/Visualize";
 import SmartInsight from "../pages/dashboard/SmartInsight";
 import Downloads from "../pages/dashboard/Downloads";
 import Settings from "../pages/dashboard/Settings";
+import ChartVisualise from "../pages/dashboard/ChartVisualise";
 
 const RoutesPath = () => {
   const location = useLocation();
@@ -69,7 +70,7 @@ const RoutesPath = () => {
             path="/visualize"
             element={
               <PrivateRoute>
-                <Visualize />
+                <ChartVisualise />
               </PrivateRoute>
             }
           />

@@ -54,7 +54,11 @@ const Dashboard = () => {
         </div>
 
         {loading ? (
-          <p>Loading dashboard...</p>
+          <div className="flex items-center justify-center h-screen bg-green-100">
+            <p className="text-center text-gray-500 text-2xl">
+              Loading Dashboard...
+            </p>
+          </div>
         ) : (
           <>
             {/* Summary Cards */}

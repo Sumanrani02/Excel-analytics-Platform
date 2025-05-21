@@ -38,8 +38,6 @@ const Login = () => {
       } else {
         navigate("/dashboard");
         setMessage("Login successful");
-
-
       }
 
   

@@ -13,7 +13,7 @@ const History = () => {
     handleView,
     handleDownload,
     handleDelete,
-    getStatusIcon
+    getStatusIcon,
   } = useAuth();
 
   return (
@@ -32,7 +32,11 @@ const History = () => {
         </div>
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading file history...</p>
+          <div className="flex items-center justify-center h-screen bg-green-100">
+            <p className="text-center text-gray-500 text-2xl">
+              Loading File History...
+            </p>
+          </div>
         ) : filteredFiles.length > 0 ? (
           <table className="table-auto w-full border-collapse border border-green-300">
             <thead className="bg-green-100">
@@ -64,7 +68,7 @@ const History = () => {
                     {file.data.length}
                   </td>
                   <td className="border border-green-300 px-4 py-2">
-                    {getStatusIcon('uploaded')}
+                    {getStatusIcon("uploaded")}
                   </td>
                   <td className="border border-green-300 px-4 py-2">
                     {new Date(file.createdAt).toLocaleString()}
@@ -94,7 +98,9 @@ const History = () => {
             </tbody>
           </table>
         ) : (
-          <p className="text-center text-gray-500">No files found.</p>
+          <div className="flex items-center justify-center h-screen bg-green-100">
+            <p className="text-center text-gray-500 text-2xl">No Files Found</p>
+          </div>
         )}
       </div>
       {!loading && <Visualize files={filteredFiles} loading={loading} />}
