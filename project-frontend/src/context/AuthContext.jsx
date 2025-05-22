@@ -4,8 +4,9 @@ import { CheckCircle, FileText, XCircle } from "lucide-react";
 
 const AuthContext = createContext();
 
+const API_BASE_URL = "http://localhost:5000";
+
 export const AuthProvider = ({ children }) => {
-  // State variables
   const [files, setFiles] = useState([]);
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,7 +19,12 @@ export const AuthProvider = ({ children }) => {
   const [chartData, setChartData] = useState(null);
   const [userName, setUserName] = useState("User");
 
-//  username
+  // Helper to get auth headers
+  const authHeader = () => {
+    const token = localStorage.getItem("token");
+    return { Authorization: `Bearer ${token}` };
+  };
+
   useEffect(() => {
     const storedName = localStorage.getItem("userName");
     if (storedName) {
@@ -27,51 +33,60 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Fetch file history on mount
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/files/history", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setFiles(res.data);
-        setFilteredFiles(res.data);
-      } catch (err) {
-        console.error("Error fetching history:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHistory();
+  const fetchFileHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/api/files/history", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFiles(res.data);
+      setFilteredFiles(res.data);
+    } catch (err) {
+      console.error("Error fetching history:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Sync `newfiles` with `setFiles`
+  useEffect(() => {
+    fetchFileHistory();
+  }, [fetchFileHistory]);
+
+  // Sync newfiles with files state
   useEffect(() => {
     setFiles(newfiles);
   }, [newfiles]);
 
-const fetchDashboardData = useCallback(async () => {
-  setLoading(true);
-  try {
-    const [summaryRes, recentUploadsRes, chartDataRes] = await Promise.all([
-      axios.get("http://localhost:5000/api/dashboard/summary"),
-      axios.get("http://localhost:5000/api/dashboard/recent-uploads"),
-      axios.get("http://localhost:5000/api/dashboard/chart-data"),
-    ]);
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
 
-    setSummary(summaryRes.data);
-    setRecentUploads(recentUploadsRes.data);
-    setChartData(chartDataRes.data);
-  } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-  } finally {
-    setLoading(false);
-  }
-}, []); // Empty array ensures fetchDashboardData remains stable.
+      const [summaryRes, recentUploadsRes, chartDataRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/dashboard/summary", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("http://localhost:5000/api/dashboard/recent-uploads", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("http://localhost:5000/api/dashboard/chart-data", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-  // Handle search functionality
-    const handleSearch = (e) => {
+      setSummary(summaryRes.data);
+      setRecentUploads(recentUploadsRes.data);
+      setChartData(chartDataRes.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Search handler
+  const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
     setFilteredFiles(
@@ -79,7 +94,7 @@ const fetchDashboardData = useCallback(async () => {
     );
   };
 
-  //   handle browse
+  // Browse handler for new file selection (if needed)
   const handlebrowse = (e) => {
     const selectedFiles = Array.from(e.target.files);
     const updatedFiles = selectedFiles.map((file) => ({
@@ -89,7 +104,6 @@ const fetchDashboardData = useCallback(async () => {
       status: "pending",
     }));
 
-    // Update newfiles state
     setNewfiles((prevNewFiles) => {
       const existingNames = prevNewFiles.map((f) => f.name);
       const filteredNewFiles = updatedFiles.filter(
@@ -98,7 +112,6 @@ const fetchDashboardData = useCallback(async () => {
       return [...prevNewFiles, ...filteredNewFiles];
     });
 
-    // Update files state
     setFiles((prevFiles) => {
       const existingNames = prevFiles.map((f) => f.name);
       const filteredNewFiles = updatedFiles.filter(
@@ -107,14 +120,12 @@ const fetchDashboardData = useCallback(async () => {
       return [...prevFiles, ...filteredNewFiles];
     });
 
-    setError(""); // Reset error message
+    setError("");
   };
 
-  // handle  upload
+  // Upload handler
   const handleUpload = async () => {
     setUploading(true);
-
-    // Create a deep copy to avoid mutating the original state
     const updatedFiles = [...files];
 
     for (let i = 0; i < updatedFiles.length; i++) {
@@ -123,7 +134,7 @@ const fetchDashboardData = useCallback(async () => {
         formData.append("file", updatedFiles[i].file);
 
         try {
-          const token = localStorage.getItem("token"); // or wherever you store it
+          const token = localStorage.getItem("token");
 
           const response = await axios.post(
             "http://localhost:5000/api/files/upload",
@@ -137,66 +148,69 @@ const fetchDashboardData = useCallback(async () => {
           );
 
           updatedFiles[i].status = "uploaded";
-          updatedFiles[i].response = response.data; // Save response for future use
+          updatedFiles[i].response = response.data;
         } catch (err) {
           console.error(err);
           updatedFiles[i].status = "error";
-          updatedFiles[i].response = null; // Add null response to avoid undefined data
+          updatedFiles[i].response = null;
           setError("Failed to upload one or more files.");
         }
       }
     }
 
-    setFiles(updatedFiles); // Update files state
-    setUploading(false); // End uploading
+    setFiles(updatedFiles);
+    setUploading(false);
   };
 
-  const handleView = (fileId) => {
-    window.open(`http://localhost:5000/api/files/view/${fileId}`, "_blank");
-  };
-
-
-  // Handle file download
-    const handleDownload = async (fileId) => {
+  // View file handler
+  const handleView = async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `http://localhost:5000/api/files/download/${fileId}`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "file.xlsx"); // Change to dynamic filename if needed
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error("Error downloading file:", err);
+      const res = await axios.get(`${API_BASE_URL}/api/files/view/${id}`, { headers: authHeader() });
+      // Open file view in new tab
+      const newWindow = window.open();
+      newWindow.document.write(res.data);
+      newWindow.document.close();
+    } catch (error) {
+      console.error("Error viewing file:", error);
     }
   };
 
-  // Handle file deletion
-  const handleDelete = async (fileId) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/files/delete/${fileId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFiles((prev) => prev.filter((file) => file._id !== fileId));
-      setFilteredFiles((prev) => prev.filter((file) => file._id !== fileId));
-    } catch (err) {
-      console.error("Error deleting file:", err);
-    }
-  };
+  // Download file handler
+const handleDownload = async (fileId, originalName) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/files/download/${fileId}`, {
+      responseType: 'blob', // VERY IMPORTANT
+    });
+
+    // Create a download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', originalName); // Excel name
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error('Download error:', err);
+  }
+};
 
 
-  // Icon based on status
+
+  // Delete file handler
+ const handleDelete = async (id) => {
+  try {
+    await axios.delete(`${API_BASE_URL}/api/files/delete/${id}`, {
+      headers: authHeader(),
+    });
+    setFiles((prevFiles) => prevFiles.filter((file) => file._id !== id));
+    setFilteredFiles((prevFiles) => prevFiles.filter((file) => file._id !== id));
+  } catch (err) {
+    console.error("Error deleting file:", err);
+  }
+};
+
+  // Status icon helper
   const getStatusIcon = (status) => {
     switch (status) {
       case "uploaded":
@@ -210,7 +224,6 @@ const fetchDashboardData = useCallback(async () => {
     }
   };
 
-  // Context value
   const value = {
     files,
     newfiles,

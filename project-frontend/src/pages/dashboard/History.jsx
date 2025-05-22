@@ -81,7 +81,7 @@ const History = () => {
                       <Eye />
                     </button>
                     <button
-                      onClick={() => handleDownload(file._id)}
+                      onClick={() => handleDownload(file._id, file.originalname)}
                       className="text-green-500 hover:text-green-700"
                     >
                       <Download />
