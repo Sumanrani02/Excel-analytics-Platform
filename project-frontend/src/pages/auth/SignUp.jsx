@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
-import axios from "axios";
-
+import { useAuth } from "../../context/AuthContext";
 const SignUp = () => {
   const {
     register,
@@ -13,26 +12,10 @@ const SignUp = () => {
     reset,
   } = useForm();
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const { registerUser, message, error } = useAuth();
 
-  const onSubmit = async (data) => {
-    setMessage("");
-    setError("");
-
-    try {
-      const response = await axios.post("http://localhost:5000/api/auth/register", data);
-
-      setMessage(response.data.msg || "User registered successfully.");
-      reset();
-
-      // Wait for 1.5s before navigating to login
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
-    } catch (err) {
-      setError(err.response?.data?.msg || "Something went wrong. Please try again.");
-    }
+  const onSubmit = (data) => {
+    registerUser(data, reset, navigate);
   };
 
   return (
@@ -50,12 +33,23 @@ const SignUp = () => {
           Sign Up Your Account
         </h2>
 
-        {message && <div className="mb-4 text-green-700 bg-green-100 p-2 rounded">{message}</div>}
-        {error && <div className="mb-4 text-red-700 bg-red-100 p-2 rounded">{error}</div>}
+        {message && (
+          <div className="mb-4 text-green-700 bg-green-100 p-2 rounded">
+            {message}
+          </div>
+        )}
+        {error && (
+          <div className="mb-4 text-red-700 bg-red-100 p-2 rounded">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-600">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-600"
+            >
               Full Name
             </label>
             <input
@@ -71,7 +65,10 @@ const SignUp = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-600">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-600"
+            >
               Email address
             </label>
             <input
@@ -82,12 +79,17 @@ const SignUp = () => {
               placeholder="Enter your email"
             />
             {errors.email && (
-              <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+              <p className="text-sm text-red-600 mt-1">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-600">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-600"
+            >
               Password
             </label>
             <input
@@ -104,7 +106,9 @@ const SignUp = () => {
               placeholder="Enter your password"
             />
             {errors.password && (
-              <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+              <p className="text-sm text-red-600 mt-1">
+                {errors.password.message}
+              </p>
             )}
           </div>
 

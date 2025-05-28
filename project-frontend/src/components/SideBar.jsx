@@ -64,17 +64,6 @@ const SideBar = () => {
               Smart Insight
             </li>
           </Link>
-          <Link to="/downloads" className="">
-            <li
-              className={`p-2 mt-4 rounded cursor-pointer ${
-                location.pathname === "/downloads"
-                  ? "bg-green-700"
-                  : "hover:bg-green-900"
-              }`}
-            >
-              Downloads
-            </li>
-          </Link>
           <Link to="/account-settings" className="">
             <li
               className={`p-2 mt-4 rounded cursor-pointer ${

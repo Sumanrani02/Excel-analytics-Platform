@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, NavLink } from "react-router-dom";
-import axios from "axios";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const {
@@ -11,39 +11,12 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const { loginUser, message, error } = useAuth();
 
-  const onSubmit = async (data) => {
-    setMessage("");
-    setError("");
-
-    try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", data);
-
-      // Extract token and user from response
-      const { token, user } = response.data;
-      const { role, name } = user;
-
-      // Save token, role, and user name in localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("name", user.name);
-
-      // Redirect based on role
-      if (user.role === "admin") {
-        setMessage("Login successful");
-        navigate("/admin/home");
-      } else {
-        navigate("/dashboard");
-        setMessage("Login successful");
-      }
-
-  
-    } catch (err) {
-      setError(err.response?.data?.msg || "Invalid email or password. Please try again.");
-    }
+  const onSubmit = (data) => {
+    loginUser(data, navigate);
   };
 
   return (
@@ -91,6 +64,11 @@ const Login = () => {
               <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
             )}
           </div>
+          <div className="mb-4">
+            <NavLink to={"/forgot-password"} className="text-sm text-green-600 hover:underline">
+              Forgot Password?
+            </NavLink>
+          </div>
           <Button type="submit">Login</Button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
@@ -105,4 +83,3 @@ const Login = () => {
 };
 
 export default Login;
-

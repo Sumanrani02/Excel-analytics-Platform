@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { CheckCircle, FileText, XCircle } from "lucide-react";
+import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
 
 const AuthContext = createContext();
 
@@ -11,13 +19,16 @@ export const AuthProvider = ({ children }) => {
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [newfiles, setNewfiles] = useState([]);
   const [summary, setSummary] = useState({});
   const [recentUploads, setRecentUploads] = useState([]);
   const [chartData, setChartData] = useState(null);
-  const [userName, setUserName] = useState("User");
+  const [user, setUser] = useState("");
+  const [excelData, setExcelData] = useState([]);
+  const [columns, setColumns] = useState([]);
 
   // Helper to get auth headers
   const authHeader = () => {
@@ -26,9 +37,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedName = localStorage.getItem("userName");
+    const storedName = localStorage.getItem("name");
     if (storedName) {
-      setUserName(storedName);
+      setUser(storedName);
     }
   }, []);
 
@@ -37,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/files/history", {
+      const res = await axios.get(`${API_BASE_URL}/api/files/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFiles(res.data);
@@ -64,13 +75,13 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem("token");
 
       const [summaryRes, recentUploadsRes, chartDataRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/dashboard/summary", {
+        axios.get(`${API_BASE_URL}/api/dashboard/summary`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("http://localhost:5000/api/dashboard/recent-uploads", {
+        axios.get(`${API_BASE_URL}/api/dashboard/recent-uploads`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("http://localhost:5000/api/dashboard/chart-data", {
+        axios.get(`${API_BASE_URL}/api/dashboard/chart-data`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -84,6 +95,110 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  const registerUser = async (data, reset, navigate) => {
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/auth/register`,
+        data
+      );
+
+      setMessage(response.data.msg || "User registered successfully.");
+      reset();
+
+      // Navigate to login after 1.5s
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+    } catch (err) {
+      setError(
+        err.response?.data?.msg || "Something went wrong. Please try again."
+      );
+    }
+  };
+
+  const loginUser = async (data, navigate) => {
+    setMessage("");
+    setError("");
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, data);
+      const { token, user } = response.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("name", user.name);
+      setUser(user.name);
+      if (user.role === "admin") {
+        setMessage("Login successful");
+        navigate("/admin/home");
+      } else {
+        navigate("/dashboard");
+        setMessage("Login successful");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.msg ||
+          "Invalid email or password. Please try again."
+      );
+    }
+  };
+
+  // forgot password
+  const forgotPassword = async (email) => {
+    try {
+      setError("");
+      setMessage("");
+      await axios.post(`${API_BASE_URL}/api/user/forgot-password`, { email });
+      setMessage("Reset password link sent to your email.");
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error ||
+        "Failed to send reset link. Try again later.";
+      toast.error(errorMessage);
+      setError(errorMessage);
+    }
+  };
+
+  // Fetch user data
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/user`);
+      setUser(response.data);
+    } catch (error) {
+      toast.error("Error fetching user data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Update user settings
+  const updateUser = async (data) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/user`, data);
+      setUser((prev) => ({ ...prev, ...data }));
+      toast.success("Changes saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save changes.");
+    }
+  };
+
+  // Delete user account
+  const deleteUser = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This action is irreversible."
+    );
+    if (confirmDelete) {
+      try {
+        await axios.delete(`${API_BASE_URL}/api/user`);
+        toast.success("Account deleted successfully!");
+        setUser(null);
+      } catch (error) {
+        toast.error("Failed to delete account.");
+      }
+    }
+  };
 
   // Search handler
   const handleSearch = (e) => {
@@ -137,7 +252,7 @@ export const AuthProvider = ({ children }) => {
           const token = localStorage.getItem("token");
 
           const response = await axios.post(
-            "http://localhost:5000/api/files/upload",
+            `${API_BASE_URL}/api/files/upload`,
             formData,
             {
               headers: {
@@ -165,7 +280,9 @@ export const AuthProvider = ({ children }) => {
   // View file handler
   const handleView = async (id) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/files/view/${id}`, { headers: authHeader() });
+      const res = await axios.get(`${API_BASE_URL}/api/files/view/${id}`, {
+        headers: authHeader(),
+      });
       // Open file view in new tab
       const newWindow = window.open();
       newWindow.document.write(res.data);
@@ -176,39 +293,43 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Download file handler
-const handleDownload = async (fileId, originalName) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/files/download/${fileId}`, {
-      responseType: 'blob', // VERY IMPORTANT
-    });
+  const handleDownload = async (fileId, originalName) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/files/download/${fileId}`,
+        {
+          responseType: "blob", // VERY IMPORTANT
+        }
+      );
 
-    // Create a download link
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', originalName); // Excel name
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (err) {
-    console.error('Download error:', err);
-  }
-};
-
-
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", originalName); // Excel name
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Download error:", err);
+    }
+  };
 
   // Delete file handler
- const handleDelete = async (id) => {
-  try {
-    await axios.delete(`${API_BASE_URL}/api/files/delete/${id}`, {
-      headers: authHeader(),
-    });
-    setFiles((prevFiles) => prevFiles.filter((file) => file._id !== id));
-    setFilteredFiles((prevFiles) => prevFiles.filter((file) => file._id !== id));
-  } catch (err) {
-    console.error("Error deleting file:", err);
-  }
-};
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/files/delete/${id}`, {
+        headers: authHeader(),
+      });
+      setFiles((prevFiles) => prevFiles.filter((file) => file._id !== id));
+      setFilteredFiles((prevFiles) =>
+        prevFiles.filter((file) => file._id !== id)
+      );
+      toast.success("file deleted successfully!!");
+    } catch (err) {
+      console.error("Error deleting file:", err);
+    }
+  };
 
   // Status icon helper
   const getStatusIcon = (status) => {
@@ -224,6 +345,48 @@ const handleDownload = async (fileId, originalName) => {
     }
   };
 
+  // chartvisualise
+  const fetchAndParseFile = async (fileId, token) => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/files/download/${fileId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download file");
+      }
+
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const data = new Uint8Array(arrayBuffer);
+      const wb = XLSX.read(data, { type: "array" });
+      const wsName = wb.SheetNames[0];
+      const ws = wb.Sheets[wsName];
+      const jsonData = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+      if (!jsonData.length) {
+        throw new Error("Selected Excel sheet is empty.");
+      }
+
+      setExcelData(jsonData);
+      setColumns(Object.keys(jsonData[0]));
+    } catch (error) {
+      console.error(error);
+      setError(error.message || "Error processing the Excel file.");
+      setExcelData([]);
+      setColumns([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     files,
     newfiles,
@@ -232,11 +395,18 @@ const handleDownload = async (fileId, originalName) => {
     uploading,
     loading,
     error,
+    message,
     summary,
     recentUploads,
     chartData,
-    setUserName,
-    userName,
+    user,
+    setUser,
+    registerUser,
+    loginUser,
+    forgotPassword,
+    deleteUser,
+    updateUser,
+    fetchUserData,
     handleSearch,
     handlebrowse,
     handleUpload,
@@ -245,6 +415,9 @@ const handleDownload = async (fileId, originalName) => {
     handleDelete,
     getStatusIcon,
     fetchDashboardData,
+    fetchAndParseFile,
+    excelData,
+    columns
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

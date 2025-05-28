@@ -1,5 +1,4 @@
-import axios from "axios";
-import { CheckCircle, Download, Eye, Trash } from "lucide-react";
+import { Download, Eye, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import Visualize from "./Visualize";
 import { useAuth } from "../../context/AuthContext";
@@ -73,18 +72,12 @@ const History = () => {
                   <td className="border border-green-300 px-4 py-2">
                     {new Date(file.createdAt).toLocaleString()}
                   </td>
-                  <td className="border border-green-300 px-4 py-2 flex gap-2">
+                  <td className="border border-green-300 px-4 py-2 flex justify-center gap-4">
                     <button
                       onClick={() => handleView(file._id)}
                       className="text-blue-500 hover:text-blue-700"
                     >
                       <Eye />
-                    </button>
-                    <button
-                      onClick={() => handleDownload(file._id, file.originalname)}
-                      className="text-green-500 hover:text-green-700"
-                    >
-                      <Download />
                     </button>
                     <button
                       onClick={() => handleDelete(file._id)}

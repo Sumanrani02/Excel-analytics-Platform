@@ -9,15 +9,14 @@ import PrivateRoute from "./PrivateRoute";
 import UploadFiles from "../pages/dashboard/UploadFiles";
 import SideBar from "../components/SideBar";
 import History from "../pages/dashboard/History";
-import Visualize from "../pages/dashboard/Visualize";
 import SmartInsight from "../pages/dashboard/SmartInsight";
-import Downloads from "../pages/dashboard/Downloads";
 import Settings from "../pages/dashboard/Settings";
 import ChartVisualise from "../pages/dashboard/ChartVisualise";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 
 const RoutesPath = () => {
   const location = useLocation();
-  const noSidebarRoutes = ["/", "/login", "/register"];
+  const noSidebarRoutes = ["/", "/login", "/register","/forgot-password"];
 
   return (
     <div className="flex w-full">
@@ -40,6 +39,8 @@ const RoutesPath = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
 
           {/* Protected Routes */}
           <Route
@@ -79,14 +80,6 @@ const RoutesPath = () => {
             element={
               <PrivateRoute>
                 <SmartInsight />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/downloads"
-            element={
-              <PrivateRoute>
-                <Downloads />
               </PrivateRoute>
             }
           />
