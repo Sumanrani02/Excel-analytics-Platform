@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { User, Mail, Lock, Trash } from "lucide-react";
+import { User, Mail, Lock, Trash, Watch } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const Settings = () => {
@@ -12,14 +12,21 @@ const Settings = () => {
     formState: { errors },
   } = useForm();
 
-  useEffect(() => {
-    if (!user) {
-      fetchUserData();
-    } else {
-      setValue("name", user.name);
-      setValue("email", user.email);
-    }
-  }, [user, fetchUserData, setValue]);
+// Fetch user if not already fetched
+useEffect(() => {
+  if (!user) {
+    fetchUserData();
+  }
+}, [user, fetchUserData]);
+
+// When user is updated, populate form values
+useEffect(() => {
+  if (user) {
+    setValue("name", user.name);
+    setValue("email", user.email);
+  }
+}, [user, setValue]);
+
 
   const onSubmit = (data) => {
     updateUser(data);
@@ -51,8 +58,9 @@ const Settings = () => {
                 <User className="mr-2" size={16} /> Name:
               </label>
               <input
-                {...register("name", { required: "Name is required" })}
+                {...register("name")}
                 type="text"
+                readOnly
                 className="w-full p-2 border border-green-300 rounded-lg focus:outline-none focus:ring focus:ring-green-200"
               />
               {errors.name && (
@@ -66,8 +74,9 @@ const Settings = () => {
                 <Mail className="mr-2" size={16} /> Email:
               </label>
               <input
-                {...register("email", { required: "Email is required" })}
+                {...register("email")}
                 type="email"
+                readOnly
                 className="w-full p-2 border border-green-300 rounded-lg focus:outline-none focus:ring focus:ring-green-200"
               />
               {errors.email && (

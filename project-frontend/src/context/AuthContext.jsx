@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   const [summary, setSummary] = useState({});
   const [recentUploads, setRecentUploads] = useState([]);
   const [chartData, setChartData] = useState(null);
-  const [user, setUser] = useState("");
+  const [user, setUser] = useState(null);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
 
@@ -37,9 +37,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedName = localStorage.getItem("name");
-    if (storedName) {
-      setUser(storedName);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
   }, []);
 
@@ -60,9 +60,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  useEffect(() => {
+ useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
     fetchFileHistory();
-  }, [fetchFileHistory]);
+  }
+}, [fetchFileHistory]);
 
   // Sync newfiles with files state
   useEffect(() => {
@@ -128,8 +131,9 @@ export const AuthProvider = ({ children }) => {
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       localStorage.setItem("role", user.role);
-      localStorage.setItem("name", user.name);
-      setUser(user.name);
+    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
+
       if (user.role === "admin") {
         setMessage("Login successful");
         navigate("/admin/home");
@@ -150,7 +154,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setError("");
       setMessage("");
-      await axios.post(`${API_BASE_URL}/api/user/forgot-password`, { email });
+      await axios.post(`${API_BASE_URL}/api/auth/forgot-password`, { email });
       setMessage("Reset password link sent to your email.");
     } catch (error) {
       const errorMessage =
@@ -161,11 +165,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (token, newPassword) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post('/api/auth/reset-password', {
+        token,
+        newPassword
+      });
+      return response.data;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch user data
   const fetchUserData = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/user`);
+      const response = await axios.get(`${API_BASE_URL}/api/user`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setUser(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data));
     } catch (error) {
       toast.error("Error fetching user data");
     } finally {
@@ -175,30 +201,64 @@ export const AuthProvider = ({ children }) => {
 
   // Update user settings
   const updateUser = async (data) => {
-    try {
-      await axios.put(`${API_BASE_URL}/api/user`, data);
-      setUser((prev) => ({ ...prev, ...data }));
-      toast.success("Changes saved successfully!");
-    } catch (error) {
-      toast.error("Failed to save changes.");
-    }
-  };
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.put(`${API_BASE_URL}/api/user`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    toast.success("User updated successfully");
+    // Update user state if needed:
+   if (response.data) {
+  setUser(response.data);
+  localStorage.setItem("user", JSON.stringify(response.data));
+}
+
+  } catch (error) {
+    toast.error(
+      error.response?.data?.msg || "Failed to update user. Try again."
+    );
+  }
+};
+
+const onSubmit = async (formData) => {
+  const { password } = formData;
+
+  if (!password) {
+    toast.error("Please enter a new password.");
+    return;
+  }
+
+  await updateUser({ password });
+};
+
 
   // Delete user account
-  const deleteUser = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete your account? This action is irreversible."
-    );
-    if (confirmDelete) {
-      try {
-        await axios.delete(`${API_BASE_URL}/api/user`);
-        toast.success("Account deleted successfully!");
-        setUser(null);
-      } catch (error) {
-        toast.error("Failed to delete account.");
-      }
+const deleteUser = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete your account? This action is irreversible."
+  );
+
+  if (confirmDelete) {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`${API_BASE_URL}/api/user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      toast.success("Account deleted successfully!");
+      setUser(null);
+      localStorage.clear(); // Clear all stored data
+      window.location.href = "/login"; // Redirect to login page
+    } catch (error) {
+      toast.error("Failed to delete account.");
     }
-  };
+  }
+};
 
   // Search handler
   const handleSearch = (e) => {
@@ -404,6 +464,7 @@ export const AuthProvider = ({ children }) => {
     registerUser,
     loginUser,
     forgotPassword,
+    resetPassword,
     deleteUser,
     updateUser,
     fetchUserData,

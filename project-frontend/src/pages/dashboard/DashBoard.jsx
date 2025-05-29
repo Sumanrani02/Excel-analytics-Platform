@@ -38,7 +38,7 @@ const Dashboard = () => {
       <div className="p-6 flex-1 bg-green-50 h-screen">
         <div className="flex justify-between items-center rounded-2xl bg-white shadow p-4 mb-5">
           <h1 className="text-2xl text-green-800 font-semibold">
-            Welcome {user}!
+            Welcome {user.name}!
           </h1>
 
           <NavLink
@@ -46,7 +46,7 @@ const Dashboard = () => {
             onClick={() => {
               localStorage.removeItem("token");
               localStorage.removeItem("role");
-              localStorage.removeItem("name"); // Clear user details
+              localStorage.removeItem("user"); // Clear user details
               setUser("");
             }}
             className="rounded-lg bg-green-100 text-green-600 py-2 px-4 font-medium hover:bg-green-200 focus:ring-2 focus:ring-green-300 focus:ring-offset-1"
