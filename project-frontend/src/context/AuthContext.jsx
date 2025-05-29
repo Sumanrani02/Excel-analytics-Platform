@@ -169,9 +169,8 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('/api/auth/reset-password', {
-        token,
-        newPassword
+      const response = await axios.post('/api/auth/reset-password/${token}', {
+        password: newPassword
       });
       return response.data;
     } catch (err) {
@@ -184,6 +183,7 @@ export const AuthProvider = ({ children }) => {
 
   // Fetch user data
   const fetchUserData = useCallback(async () => {
+    const token = localStorage.getItem("token");
     try {
       const response = await axios.get(`${API_BASE_URL}/api/user`,{
         headers: {

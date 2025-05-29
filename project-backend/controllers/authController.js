@@ -1,12 +1,17 @@
 import User from '../models/User.js';
-import crypto from 'crypto';
-import nodemailer from 'nodemailer';
-import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import sgMail from '@sendgrid/mail'
+
+
 
 dotenv.config();
+
+console.log('SendGrid API key loaded:', process.env.SENDGRID_API_KEY);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+
 
 // REGISTER
 export const register = async (req, res) => {
@@ -78,126 +83,51 @@ export const login = async (req, res) => {
 
 
 export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
   try {
-    const { email } = req.body;
     const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Security: Always return same message regardless of user existence
-    if (!user) {
-      return res.status(200).json({
-        message: 'If this email exists in our system, you will receive a reset link'
-      });
-    }
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Generate secure token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
+ ;
 
-    user.resetPasswordToken = crypto
-      .createHash('sha256')
-      .update(resetToken)
-      .digest('hex');
-    user.resetPasswordExpires = resetTokenExpiry;
-    await user.save();
-
-    // Create reset URL
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-
- await req.transporter.sendMail({
+    const msg = {
+      to: user.email,
       from: process.env.EMAIL_FROM,
-      to: user.email,
-      subject: 'Password Reset Request',
-      html: `...your email template...`
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Password reset link sent to email'
-    });
-
-    console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error sending reset email'
-    });
-
-    // Send email using SendGrid
-    const mailOptions = {
-      from: `"Your App" <${process.env.EMAIL_FROM}>`,
-      to: user.email,
-      subject: 'Password Reset Request',
+      subject: 'Password Reset Link',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Password Reset</h2>
-          <p>Click the button below to reset your password:</p>
-          <a href="${resetUrl}" 
-             style="display: inline-block; background: #4CAF50; color: white; 
-                    padding: 12px 24px; text-decoration: none; border-radius: 4px;
-                    margin: 15px 0; font-weight: bold;">
-             Reset Password
-          </a>
-          <p style="color: #666;">This link expires in 1 hour.</p>
-          <p style="font-size: 12px; color: #999;">
-            If you didn't request this, please ignore this email.
-          </p>
-        </div>
-      `
+        <h3>Password Reset Request</h3>
+        <p> Are you want to change the password if you want to click <a href="${resetLink}">here</a> to reset your password.</p>
+        <p>This link will expire in 1 hour.</p>
+      `,
     };
 
-    await req.app.get('transporter').sendMail(mailOptions);
+    await sgMail.send(msg);
 
-    res.status(200).json({
-      success: true,
-      message: 'Password reset link sent to email'
-    });
-
-  }catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error sending reset email'
-    });
+    res.status(200).json({ message: 'Reset link sent to your email.' });
+  } catch (error) {
+    console.error('SendGrid Error:', error);
+    res.status(500).json({ message: 'Server error while sending email' });
   }
 };
 
 export const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
   try {
-    const { token, newPassword } = req.body;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Hash the token to compare with stored value
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
-
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired token'
-      });
-    }
-
-    // Update password and clear token
-    user.password = newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    const hashedPassword = await bcrypt.hash(password, 12);
+    user.password = hashedPassword;
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: 'Password updated successfully'
-    });
-
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error resetting password'
-    });
+    res.status(200).json({ message: 'Password reset successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: 'Invalid or expired token' });
   }
 };
