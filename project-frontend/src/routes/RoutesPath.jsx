@@ -13,14 +13,18 @@ import SmartInsight from "../pages/dashboard/SmartInsight";
 import Settings from "../pages/dashboard/Settings";
 import ChartVisualise from "../pages/dashboard/ChartVisualise";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 const RoutesPath = () => {
   const location = useLocation();
-  const noSidebarRoutes = ["/", "/login", "/register","/forgot-password"];
+  const noSidebarRoutes = ["/", "/login", "/register", "/forgot-password"];
+  const isNoSidebarRoute =
+    noSidebarRoutes.includes(location.pathname) ||
+    location.pathname.match(/^\/reset-password\/.+/);
 
   return (
     <div className="flex w-full">
-      {!noSidebarRoutes.includes(location.pathname) && (
+      {!isNoSidebarRoute && (
         <div className="w-1/5">
           <SideBar />
         </div>
@@ -40,7 +44,7 @@ const RoutesPath = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected Routes */}
           <Route

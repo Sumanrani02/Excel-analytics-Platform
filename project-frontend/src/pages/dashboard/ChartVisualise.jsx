@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Canvas } from "@react-three/fiber";
@@ -6,32 +6,14 @@ import { useAuth } from "../../context/AuthContext";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// 3D Bar Chart Component
-function Bar3DChart({ data, xKey, yKey }) {
-  const maxHeight =
-    Math.max(...data.map((item) => Number(item[yKey]) || 0)) || 1;
-
-  return (
-    <Canvas
-      style={{ height: 400, borderRadius: 10, background: "#fff" }}
-      camera={{ position: [0, 5, 15], fov: 50 }}
-    >
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[3, 10, 5]} intensity={1} />
-      <group position={[-(data.length - 1) / 2, 0, 0]}>
-        {data.map((item, idx) => {
-          const height = ((Number(item[yKey]) || 0) / maxHeight) * 5;
-          return (
-            <mesh key={idx} position={[idx * 1.5, height / 2, 0]}>
-              <boxGeometry args={[1, height, 1]} />
-              <meshStandardMaterial color="#3B82F6" />
-            </mesh>
-          );
-        })}
-      </group>
-    </Canvas>
-  );
-}
+const generateColors = (n) => {
+  const colors = [];
+  for (let i = 0; i < n; i++) {
+    const hue = (i * (360 / n)) % 360;
+    colors.push(`hsl(${hue}, 70%, 60%)`);
+  }
+  return colors;
+};
 
 export default function ChartVisualise() {
   const {
@@ -48,6 +30,7 @@ export default function ChartVisualise() {
   const [xKey, setXKey] = useState("");
   const [yKey, setYKey] = useState("");
   const [chartType, setChartType] = useState("bar");
+  const chartRef = useRef(null); // Reference to the chart
 
   const handleFileChange = async (fileId) => {
     setSelectedFileId(fileId);
@@ -56,15 +39,6 @@ export default function ChartVisualise() {
     if (fileId) {
       await fetchAndParseFile(fileId, localStorage.getItem("token"));
     }
-  };
-
-  const generateColors = (n) => {
-    const colors = [];
-    for (let i = 0; i < n; i++) {
-      const hue = (i * (360 / n)) % 360;
-      colors.push(`hsl(${hue}, 70%, 60%)`);
-    }
-    return colors;
   };
 
   const chartData = useMemo(() => {
@@ -96,6 +70,16 @@ export default function ChartVisualise() {
       ],
     };
   }, [xKey, yKey, excelData, chartType]);
+
+  const downloadChart = () => {
+    if (chartRef.current) {
+      const chartImage = chartRef.current.toBase64Image();
+      const link = document.createElement("a");
+      link.href = chartImage;
+      link.download = `${selectedFileName || "chart"}.${chartType === "bar" ? "png" : "jpg"}`;
+      link.click();
+    }
+  };
 
   return (
     <div className="min-h-screen p-6 bg-green-100">
@@ -195,17 +179,22 @@ export default function ChartVisualise() {
                 >
                   <option value="bar">Bar Chart</option>
                   <option value="pie">Pie Chart</option>
-                  <option value="3d">3D Bar Chart</option>
                 </select>
 
-                {chartType === "bar" && chartData && <Bar data={chartData} />}
+                <button
+                  onClick={downloadChart}
+                  className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Download Chart
+                </button>
+
+                {chartType === "bar" && chartData && (
+                  <Bar ref={chartRef} data={chartData} />
+                )}
                 {chartType === "pie" && chartData && (
                   <div className="w-[50%] mx-auto">
-                    <Pie data={chartData} />{" "}
+                    <Pie ref={chartRef} data={chartData} />
                   </div>
-                )}
-                {chartType === "3d" && xKey && yKey && (
-                  <Bar3DChart data={excelData} xKey={xKey} yKey={yKey} />
                 )}
               </>
             )}

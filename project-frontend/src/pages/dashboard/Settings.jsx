@@ -4,7 +4,7 @@ import { User, Mail, Lock, Trash, Watch } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const Settings = () => {
-  const { user, fetchUserData, updateUser, deleteUser, loading } = useAuth();
+  const { user, fetchUserData, updateUser, deleteAccount, loading } = useAuth();
   const {
     register,
     handleSubmit,
@@ -119,7 +119,7 @@ useEffect(() => {
 
           {/* Delete Account Button */}
           <button
-            onClick={deleteUser}
+            onClick={deleteAccount}
             className="ml-64 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 focus:outline-none"
           >
             <Trash className="inline-block mr-2" size={16} /> Delete Account

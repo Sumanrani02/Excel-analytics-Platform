@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
+  const [users, setUsers] = useState([]);
 
   // Helper to get auth headers
   const authHeader = () => {
@@ -60,12 +61,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
- useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    fetchFileHistory();
-  }
-}, [fetchFileHistory]);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchFileHistory();
+    }
+  }, [fetchFileHistory]);
 
   // Sync newfiles with files state
   useEffect(() => {
@@ -76,7 +77,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-
       const [summaryRes, recentUploadsRes, chartDataRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/dashboard/summary`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -131,8 +131,8 @@ export const AuthProvider = ({ children }) => {
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       localStorage.setItem("role", user.role);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
+      localStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
 
       if (user.role === "admin") {
         setMessage("Login successful");
@@ -168,13 +168,21 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async (token, newPassword) => {
     setLoading(true);
     setError(null);
+    setMessage(null); // Clear previous messages
     try {
-      const response = await axios.post('/api/auth/reset-password/${token}', {
-        password: newPassword
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/auth/reset-password/${token}`,
+        {
+          password: newPassword,
+        }
+      );
+      setMessage("Password reset successful! Redirecting...");
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(
+        err.response?.data?.message ||
+          "Password reset failed. Please try again."
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -185,7 +193,7 @@ export const AuthProvider = ({ children }) => {
   const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/user`,{
+      const response = await axios.get(`${API_BASE_URL}/api/user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -201,64 +209,62 @@ export const AuthProvider = ({ children }) => {
 
   // Update user settings
   const updateUser = async (data) => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await axios.put(`${API_BASE_URL}/api/user`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    toast.success("User updated successfully");
-    // Update user state if needed:
-   if (response.data) {
-  setUser(response.data);
-  localStorage.setItem("user", JSON.stringify(response.data));
-}
-
-  } catch (error) {
-    toast.error(
-      error.response?.data?.msg || "Failed to update user. Try again."
-    );
-  }
-};
-
-const onSubmit = async (formData) => {
-  const { password } = formData;
-
-  if (!password) {
-    toast.error("Please enter a new password.");
-    return;
-  }
-
-  await updateUser({ password });
-};
-
-
-  // Delete user account
-const deleteUser = async () => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete your account? This action is irreversible."
-  );
-
-  if (confirmDelete) {
     try {
       const token = localStorage.getItem("token");
-
-      await axios.delete(`${API_BASE_URL}/api/user`, {
+      const response = await axios.put(`${API_BASE_URL}/api/user`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      toast.success("Account deleted successfully!");
-      setUser(null);
-      localStorage.clear(); // Clear all stored data
-      window.location.href = "/login"; // Redirect to login page
+      toast.success("User updated successfully");
+      // Update user state if needed:
+      if (response.data) {
+        setUser(response.data);
+        localStorage.setItem("user", JSON.stringify(response.data));
+      }
     } catch (error) {
-      toast.error("Failed to delete account.");
+      toast.error(
+        error.response?.data?.msg || "Failed to update user. Try again."
+      );
     }
-  }
-};
+  };
+
+  const onSubmit = async (formData) => {
+    const { password } = formData;
+
+    if (!password) {
+      toast.error("Please enter a new password.");
+      return;
+    }
+
+    await updateUser({ password });
+  };
+
+  // Delete user account
+  const deleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This action is irreversible."
+    );
+
+    if (confirmDelete) {
+      try {
+        const token = localStorage.getItem("token");
+
+        await axios.delete(`${API_BASE_URL}/api/user`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        toast.success("Account deleted successfully!");
+        setUser(null);
+        localStorage.clear(); // Clear all stored data
+        window.location.href = "/login"; // Redirect to login page
+      } catch (error) {
+        toast.error("Failed to delete account.");
+      }
+    }
+  };
 
   // Search handler
   const handleSearch = (e) => {
@@ -376,7 +382,7 @@ const deleteUser = async () => {
   };
 
   // Delete file handler
-  const handleDelete = async (id) => {
+  const handleDeletefile = async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/api/files/delete/${id}`, {
         headers: authHeader(),
@@ -447,6 +453,61 @@ const deleteUser = async () => {
     }
   };
 
+  // Delete user by admin handler
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/api/admin/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("User deleted successfully");
+      setUsers((prev) => prev.filter((u) => u._id !== userId));
+    } catch (err) {
+      toast.error("Failed to delete user");
+      console.error(err);
+    }
+  };
+  // Delete file by admin handler
+  const handleDeleteFilebyAdmin = async (userId, fileId) => {
+    if (!window.confirm("Are you sure you want to delete this file?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/api/files/delete/${fileId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("File deleted successfully");
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId
+            ? { ...u, files: u.files.filter((file) => file._id !== fileId) }
+            : u
+        )
+      );
+    } catch (err) {
+      toast.error("Failed to delete file");
+      console.error(err);
+    }
+  };
+
+  //  all users data
+  const fetchAllUsers = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_BASE_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(response.data);
+    } catch (err) {
+      setError("Failed to load users.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const value = {
     files,
     newfiles,
@@ -465,7 +526,7 @@ const deleteUser = async () => {
     loginUser,
     forgotPassword,
     resetPassword,
-    deleteUser,
+    deleteAccount,
     updateUser,
     fetchUserData,
     handleSearch,
@@ -473,12 +534,16 @@ const deleteUser = async () => {
     handleUpload,
     handleView,
     handleDownload,
-    handleDelete,
+    handleDeletefile,
     getStatusIcon,
     fetchDashboardData,
     fetchAndParseFile,
     excelData,
-    columns
+    columns,
+    handleDeleteFilebyAdmin,
+    handleDeleteUser,
+    fetchAllUsers,
+    users,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

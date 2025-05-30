@@ -10,8 +10,7 @@ const History = () => {
     loading,
     handleSearch,
     handleView,
-    handleDownload,
-    handleDelete,
+  handleDeletefile,
     getStatusIcon,
   } = useAuth();
 
@@ -80,7 +79,7 @@ const History = () => {
                       <Eye />
                     </button>
                     <button
-                      onClick={() => handleDelete(file._id)}
+                      onClick={() => handleDeletefile(file._id)}
                       className="text-red-500 hover:text-red-700"
                     >
                       <Trash />
