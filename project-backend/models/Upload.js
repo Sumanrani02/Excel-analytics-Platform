@@ -12,5 +12,8 @@ const uploadSchema = new mongoose.Schema({
   }
 }, { timestamps: true }); // Adds createdAt and updatedAt automatically
 
+// Add virtual to userSchema
+
+
 const Upload = mongoose.model('Upload', uploadSchema);
 export default Upload;

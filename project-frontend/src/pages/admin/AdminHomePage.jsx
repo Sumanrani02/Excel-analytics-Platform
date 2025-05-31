@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import  { useCallback,useEffect } from "react";
 import { Trash2, User, FileText } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
@@ -14,11 +14,14 @@ export default function AdminHome() {
     handleDeleteFilebyAdmin,
   } = useAuth();
 
-  useEffect(() => {
-    if (user && user.role === "admin") {
-      fetchAllUsers(); // Fetch users when the component mounts
-    }
-  }, [user, fetchAllUsers]);
+useEffect(() => {
+  if (user?.role === "admin" && user?.token) {
+    console.log("Calling fetchAllUsers");
+    fetchAllUsers();
+  }
+}, [user?.role, user?.token]); // DO NOT include fetchAllUsers in dependencies
+
+
 
   const handleRemoveUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
@@ -63,7 +66,7 @@ export default function AdminHome() {
           <div className="text-center text-red-600 font-semibold">{error}</div>
         )}
 
-        {users.length === 0 && !loading && (
+        {Array.isArray(users) && users.length === 0 && !loading && (
           <div className="text-center text-green-700 font-semibold">
             No users found.
           </div>
@@ -78,7 +81,7 @@ export default function AdminHome() {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {Array.isArray(users) && users.map((u) => (
               <tr
                 key={u._id}
                 className="border-b border-green-300 hover:bg-green-50 transition-colors"

@@ -117,17 +117,25 @@ export const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
   try {
+    console.log("Token received:", token);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded token:", decoded);
+
     const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      console.log("User not found");
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 12);
     user.password = hashedPassword;
+
     await user.save();
+    console.log("Password updated and saved for user:", user.email);
 
     res.status(200).json({ message: 'Password reset successfully' });
   } catch (err) {
-    console.error(err);
+    console.error("Reset password error:", err);
     res.status(400).json({ message: 'Invalid or expired token' });
   }
 };

@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newfiles, setNewfiles] = useState([]);
   const [summary, setSummary] = useState({});
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [users, setUsers] = useState([]);
-
+ 
   // Helper to get auth headers
   const authHeader = () => {
     const token = localStorage.getItem("token");
@@ -123,31 +123,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginUser = async (data, navigate) => {
-    setMessage("");
-    setError("");
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, data);
-      const { token, user } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
+const loginUser = async (data, navigate) => {
+  setMessage("");
+  setError("");
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/login`, data);
+    const { token, user } = response.data;
 
-      if (user.role === "admin") {
-        setMessage("Login successful");
-        navigate("/admin/home");
-      } else {
-        navigate("/dashboard");
-        setMessage("Login successful");
-      }
-    } catch (err) {
-      setError(
-        err.response?.data?.msg ||
-          "Invalid email or password. Please try again."
-      );
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", user.role);
+    localStorage.setItem("user", JSON.stringify({ ...user, token }));  // store with token
+
+    setUser({ ...user, token });  // <-- important
+
+    if (user.role === "admin") {
+      setMessage("Login successful");
+      navigate("/admin/home");
+    } else {
+      navigate("/dashboard");
+      setMessage("Login successful");
     }
-  };
+  } catch (err) {
+    setError(
+      err.response?.data?.msg ||
+        "Invalid email or password. Please try again."
+    );
+  }
+};
+
 
   // forgot password
   const forgotPassword = async (email) => {
@@ -165,29 +168,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const resetPassword = async (token, newPassword) => {
-    setLoading(true);
-    setError(null);
-    setMessage(null); // Clear previous messages
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/auth/reset-password/${token}`,
-        {
-          password: newPassword,
-        }
-      );
-      setMessage("Password reset successful! Redirecting...");
-      return response.data;
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Password reset failed. Please try again."
-      );
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+const resetPassword = async (token, newPassword) => {
+  console.log("resetPassword function called with", { token, newPassword });
+  setLoading(true);
+  setError(null);
+  setMessage(null);
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/auth/reset-password/${token}`,
+      { password: newPassword }
+    );
+    setError(null);  // clear error on success
+    setMessage(response.data.message || "Password reset successful! Redirecting...");
+    return true;
+  } catch (err) {
+    setError(
+      err.response?.data?.message ||
+      "Password reset failed. Please try again."
+    );
+    setMessage(null);
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // Fetch user data
   const fetchUserData = useCallback(async () => {
@@ -470,10 +476,12 @@ export const AuthProvider = ({ children }) => {
   };
   // Delete file by admin handler
   const handleDeleteFilebyAdmin = async (userId, fileId) => {
+     console.log("Delete button clicked for file", fileId);
     if (!window.confirm("Are you sure you want to delete this file?")) return;
+     console.log("Confirmed deletion");
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API_BASE_URL}/api/files/delete/${fileId}`, {
+      await axios.delete(`${API_BASE_URL}/api/admin/users/${userId}/delete/${fileId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("File deleted successfully");
@@ -491,22 +499,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   //  all users data
-  const fetchAllUsers = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_BASE_URL}/api/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(response.data);
-    } catch (err) {
-      setError("Failed to load users.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+const fetchAllUsers = useCallback(async () => {
+  if (!user?.token) return;
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/admin/users`, {
+  headers: { Authorization: `Bearer ${user.token}` },
+
+    });
+
+    console.log("Response from /api/admin/users:", res.data);
+    setUsers(res.data.users); // ✅ CORRECT: Extract 'users' array from the object
+    setError(null);
+  } catch (err) {
+    console.error("Error fetching users:", err.response?.data || err.message);
+    setError("Failed to fetch users");
+  }
+}, [user?.token]);
+
+
+
+
+
+
+
 
   const value = {
     files,
