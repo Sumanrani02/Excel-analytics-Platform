@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Doughnut } from "react-chartjs-2";
-import SideBar from "../../components/SideBar";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -36,7 +35,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex w-full">
-      <SideBar />
+     
       <div className="p-6 flex-1 bg-green-50 h-screen">
         <div className="flex justify-between items-center rounded-2xl bg-white shadow p-4 mb-5">
           <h1 className="text-2xl text-green-800 font-semibold">
