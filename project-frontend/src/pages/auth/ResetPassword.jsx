@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";  // Import axios
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 
@@ -14,29 +15,28 @@ const ResetPasswordTest = () => {
     formState: { errors },
   } = useForm();
 
-  // Mock resetPassword function for testing
+  // Real API call to reset password
   const resetPassword = async (token, newPassword) => {
-    console.log("Mock resetPassword called");
-    console.log("Token:", token);
-    console.log("New Password:", newPassword);
-
-    // Simulate API delay
-    await new Promise((res) => setTimeout(res, 1000));
-
-    // Simulate success response
-    return { message: "Password reset successful! Redirecting..." };
+    try {
+      const response = await axios.post(
+        `/api/auth/reset-password/${token}`, // Your backend route
+        { password: newPassword }
+      );
+      return response.data; // Should contain { message: 'Password reset successfully' }
+    } catch (error) {
+      // Throw error to be caught in onSubmit
+      throw error.response?.data || { message: 'Something went wrong' };
+    }
   };
 
   const onSubmit = async (data) => {
-    console.log("onSubmit called", data);
     try {
       const result = await resetPassword(token, data.password);
-      console.log("resetPassword result:", result);
-
       alert(result.message);
 
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
+      alert(err.message || "Password reset failed.");
       console.error("Password reset failed.", err);
     }
   };

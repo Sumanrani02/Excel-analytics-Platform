@@ -26,22 +26,19 @@ export const deleteUser = async (req, res) => {
 // adminController.js
 
 export const deleteUserFileByAdmin = async (req, res) => {
-  const { userId, fileId } = req.params;
+ const { userId, fileId } = req.params;
 
   try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    // Optional: Check if file belongs to userId
+    const file = await Upload.findOne({ _id: fileId, userId: userId });
+    if (!file) return res.status(404).json({ message: "File not found" });
 
-    const fileIndex = user.files.findIndex(file => file._id.toString() === fileId);
-    if (fileIndex === -1) return res.status(404).json({ message: "File not found" });
+    await Upload.findByIdAndDelete(fileId);
 
-    user.files.splice(fileIndex, 1);
-    await user.save();
-
-    return res.status(200).json({ message: "File deleted successfully" });
+    res.status(200).json({ message: "File deleted successfully" });
   } catch (error) {
-    console.error("Error in deleteUserFileByAdmin:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Delete file error:", error);
+    res.status(500).json({ message: "Failed to delete file" });
   }
 };
 

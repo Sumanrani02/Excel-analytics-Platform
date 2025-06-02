@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }) => {
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [users, setUsers] = useState([]);
+  const [insights, setInsights] = useState("");
  
   // Helper to get auth headers
   const authHeader = () => {

@@ -1,101 +1,119 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
-function calculateMedian(numbers) {
-  if (numbers.length === 0) return 0;
-  const sorted = [...numbers].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 !== 0
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2;
-}
+const SmartInsightsView = () => {
+  const { user } = useAuth();
+  const token = user?.token;
 
-function SmartInsight() {
-  const { files, columns } = useAuth();
+  const [files, setFiles] = useState([]);
+  const [selectedFileId, setSelectedFileId] = useState("");
+  const [insight, setInsight] = useState("");
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [loadingInsight, setLoadingInsight] = useState(false);
+  const [error, setError] = useState("");
 
-  const numericColumns = useMemo(() => {
-    if (!columns || columns.length === 0 || files.length === 0) return [];
-    return columns.filter((col) =>
-      files.some((row) => !isNaN(parseFloat(row[col])))
-    );
-  }, [columns, files]);
+  useEffect(() => {
+    if (!token) {
+      setError("You must be logged in to see files.");
+      return;
+    }
 
-  const insights = useMemo(() => {
-    if (!files || files.length === 0) return [];
-    return numericColumns.map((col) => {
-      const values = files
-        .map((row) => parseFloat(row[col]))
-        .filter((v) => !isNaN(v));
-
-      const missingCount = files.length - values.length;
-      if (values.length === 0) {
-        return {
-          column: col,
-          insight: "No numeric data available",
-        };
+    const fetchFiles = async () => {
+      setLoadingFiles(true);
+      try {
+        const res = await axios.get("http://localhost:5000/api/files", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFiles(res.data.files || []);
+      } catch (err) {
+        setError("Unable to load uploaded files.");
+      } finally {
+        setLoadingFiles(false);
       }
+    };
 
-      const sum = values.reduce((acc, v) => acc + v, 0);
-      const mean = sum / values.length;
-      const median = calculateMedian(values);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const variance =
-        values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / values.length;
-      const stdDev = Math.sqrt(variance);
-      const outlier = max > mean + 2 * stdDev;
+    fetchFiles();
+  }, [token]);
 
-      return {
-        column: col,
-        insight: (
-          <>
-            <p>
-              <strong>{col}</strong>: Mean = {mean.toFixed(2)}, Median ={" "}
-              {median.toFixed(2)}, Min = {min}, Max = {max}
-              {missingCount > 0 && <>, Missing values = {missingCount}</>}
-            </p>
-            {outlier && (
-              <p style={{ color: "red" }}>
-                Notice: Max value is significantly higher than average
-                (possible outlier).
-              </p>
-            )}
-          </>
-        ),
-      };
-    });
-  }, [files, numericColumns]);
-
-  if (!files || files.length === 0) {
-    return (
-      <div className="p-4 my-4 bg-white rounded-lg shadow-md text-center text-gray-600">
-        No data loaded to generate insights.
-      </div>
-    );
+const generateInsight = async () => {
+  if (!selectedFileId) {
+    setError("Please select a file.");
+    return;
   }
+  setError("");
+  setInsight("");
+  setLoadingInsight(true);
+
+  try {
+    const res = await axios.post(
+      `http://localhost:5000/api/insights/files/${selectedFileId}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setInsight(res.data.insight);
+  } catch (error) {
+    if (error.response) {
+      // Server responded with a status outside 2xx
+      setError(`Failed to generate insight. Status: ${error.response.status}`);
+    } else if (error.request) {
+      // Request was made but no response
+      setError("No response from server.");
+    } else {
+      // Something else happened
+      setError("Error generating insight.");
+    }
+  } finally {
+    setLoadingInsight(false);
+  }
+};
+
 
   return (
-    <div className="p-6 my-6 bg-white rounded-xl shadow-lg max-w-4xl mx-auto">
-      <h3 className="text-2xl font-semibold mb-4 text-green-800">
-        Smart Insights
-      </h3>
-      {insights.length === 0 && (
-        <p className="text-gray-600">
-          No numeric columns available for analysis.
-        </p>
-      )}
-      <div className="space-y-4 max-h-96 overflow-auto">
-        {insights.map((ins, idx) => (
-          <div
-            key={idx}
-            className="border border-green-200 rounded-md p-3 bg-green-50"
+    <div className="max-w-xl mx-auto p-6 bg-white rounded shadow">
+      <h2 className="text-2xl font-semibold mb-4">Smart Insights</h2>
+
+      {loadingFiles ? (
+        <p>Loading your files...</p>
+      ) : (
+        <>
+          <label htmlFor="file-select" className="block mb-2 font-medium">
+            Choose an uploaded file:
+          </label>
+          <select
+            id="file-select"
+            value={selectedFileId}
+            onChange={(e) => setSelectedFileId(e.target.value)}
+            className="border rounded p-2 w-full mb-4"
           >
-            {ins.insight}
-          </div>
-        ))}
-      </div>
+            <option value="">-- Select a file --</option>
+            {files.map(({ _id, originalname }) => (
+              <option key={_id} value={_id}>
+                {originalname}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={generateInsight}
+            disabled={loadingInsight || !selectedFileId}
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-blue-700"
+          >
+            {loadingInsight ? "Generating Insight..." : "Get Insight"}
+          </button>
+
+          {error && <p className="mt-4 text-red-600">{error}</p>}
+
+          {insight && (
+            <section className="mt-6 p-4 bg-gray-50 rounded border border-gray-300">
+              <h3 className="font-semibold mb-2">Insight Summary</h3>
+              <p>{insight}</p>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
-}
+};
 
-export default SmartInsight;
+export default SmartInsightsView;

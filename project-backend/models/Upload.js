@@ -4,6 +4,7 @@ const uploadSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   filename: String,
   originalname: String,
+  buffer: Buffer,
   data: [{}], // Parsed Excel rows
    status: {
     type: String,
@@ -12,7 +13,7 @@ const uploadSchema = new mongoose.Schema({
   }
 }, { timestamps: true }); // Adds createdAt and updatedAt automatically
 
-// Add virtual to userSchema
+
 
 
 const Upload = mongoose.model('Upload', uploadSchema);

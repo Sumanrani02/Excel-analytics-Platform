@@ -39,7 +39,7 @@ const Dashboard = () => {
       <div className="p-6 flex-1 bg-green-50 h-screen">
         <div className="flex justify-between items-center rounded-2xl bg-white shadow p-4 mb-5">
           <h1 className="text-2xl text-green-800 font-semibold">
-            Welcome {user.name}!
+            Welcome {user?.name}!
           </h1>
 
           <NavLink

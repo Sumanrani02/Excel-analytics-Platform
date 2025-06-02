@@ -88,7 +88,7 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
     const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
  ;
@@ -119,15 +119,16 @@ export const resetPassword = async (req, res) => {
   try {
     console.log("Token received:", token);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
     console.log("Decoded token:", decoded);
 
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(userId);
     if (!user) {
       console.log("User not found");
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
 
     await user.save();

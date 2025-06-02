@@ -5,7 +5,7 @@ import {
   getUploadHistory,
   viewFileById,
   downloadFileById,
-  deleteFileById
+  deleteFileById,getUserFiles
 } from '../controllers/fileController.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -18,5 +18,6 @@ router.get('/history', authMiddleware, getUploadHistory);
 router.get('/view/:id', authMiddleware, viewFileById);
 router.get('/download/:id', authMiddleware, downloadFileById);
 router.delete('/delete/:id', authMiddleware, deleteFileById);
+router.get('/', authMiddleware, getUserFiles);
 
 export default router;

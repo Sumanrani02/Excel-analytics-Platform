@@ -2,7 +2,9 @@ import xlsx from 'xlsx';
 import fs from 'fs';
 import path from 'path';
 import Upload from '../models/Upload.js'; // Use Upload consistently
+import multer from 'multer';
 
+const upload = multer({ storage: multer.memoryStorage() }); // ✅
 // Upload File
 export const uploadFile = async (req, res) => {
   try {
@@ -16,6 +18,7 @@ export const uploadFile = async (req, res) => {
       userId: req.user.id,
       filename: req.file.originalname,
       originalname: req.file.originalname,
+      buffer: req.file.buffer,
       data: jsonData,
     });
 
@@ -99,4 +102,17 @@ export const deleteFileById = async (req, res) => {
     res.status(500).send('Error deleting file');
   }
 };
+
+//getUserFiles
+export const getUserFiles = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const files = await Upload.find({ userId });
+    res.status(200).json({ files });
+  } catch (error) {
+    console.error("Error fetching user files:", error);
+    res.status(500).json({ error: "Failed to fetch user files" });
+  }
+};
+
 
