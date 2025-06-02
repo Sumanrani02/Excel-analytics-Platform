@@ -1,11 +1,18 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const SideBar = () => {
-  const { user } = useAuth();
-
+  const navigate = useNavigate();
+  const [user, setUser] = useState([]);
   const location = useLocation();
+  useEffect(() => {
+    const finduser = localStorage.getItem("role");
+    setUser(finduser);
+  }, []);
+  
+  if (!user) {
+    navigate("/login");
+  }
   const adminRoutes = [
     { path: "/admin/home", label: "Dashboard" },
     { path: "/account-settings", label: "Account Settings" },
@@ -20,7 +27,7 @@ const SideBar = () => {
     { path: "/account-settings", label: "Account Settings" },
   ];
 
-  const routes = user.role === "admin" ? adminRoutes : commonRoutes;
+  const routes = user==="admin" ? adminRoutes : commonRoutes;
 
   return (
     <div className="w-1/5 fixed top-0 left-0">

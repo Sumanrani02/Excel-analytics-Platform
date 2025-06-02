@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
-const SmartInsightsView = () => {
+const SmartInsights = () => {
   const { user } = useAuth();
   const token = user?.token;
 
@@ -36,84 +36,97 @@ const SmartInsightsView = () => {
     fetchFiles();
   }, [token]);
 
-const generateInsight = async () => {
-  if (!selectedFileId) {
-    setError("Please select a file.");
-    return;
-  }
-  setError("");
-  setInsight("");
-  setLoadingInsight(true);
-
-  try {
-    const res = await axios.post(
-      `http://localhost:5000/api/insights/files/${selectedFileId}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setInsight(res.data.insight);
-  } catch (error) {
-    if (error.response) {
-      // Server responded with a status outside 2xx
-      setError(`Failed to generate insight. Status: ${error.response.status}`);
-    } else if (error.request) {
-      // Request was made but no response
-      setError("No response from server.");
-    } else {
-      // Something else happened
-      setError("Error generating insight.");
+  const generateInsight = async () => {
+    if (!selectedFileId) {
+      setError("Please select a file.");
+      return;
     }
-  } finally {
-    setLoadingInsight(false);
-  }
-};
+    setError("");
+    setInsight("");
+    setLoadingInsight(true);
 
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/insights/files/${selectedFileId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setInsight(res.data.insight);
+    } catch (error) {
+      if (error.response) {
+        setError(`Failed to generate insight. Status: ${error.response.status}`);
+      } else if (error.request) {
+        setError("No response from server.");
+      } else {
+        setError("Error generating insight.");
+      }
+    } finally {
+      setLoadingInsight(false);
+    }
+  };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-semibold mb-4">Smart Insights</h2>
+    <div className="min-h-screen p-6 bg-green-100">
+      <div className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-xl shadow-lg">
+        <h2 className="text-3xl font-semibold text-center text-green-800 mb-8">
+          Smart Insights
+        </h2>
 
-      {loadingFiles ? (
-        <p>Loading your files...</p>
-      ) : (
-        <>
-          <label htmlFor="file-select" className="block mb-2 font-medium">
-            Choose an uploaded file:
-          </label>
-          <select
-            id="file-select"
-            value={selectedFileId}
-            onChange={(e) => setSelectedFileId(e.target.value)}
-            className="border rounded p-2 w-full mb-4"
-          >
-            <option value="">-- Select a file --</option>
-            {files.map(({ _id, originalname }) => (
-              <option key={_id} value={_id}>
-                {originalname}
-              </option>
-            ))}
-          </select>
+        {loadingFiles ? (
+          <p className="text-center text-gray-500 text-2xl">
+            Loading your files...
+          </p>
+        ) : (
+          <>
+            {files.length === 0 ? (
+              <p className="text-center text-gray-500 text-2xl">
+                No Uploaded files Available!!!
+              </p>
+            ) : (
+              <>
+                <label
+                  htmlFor="file-select"
+                  className="block mb-2 text-gray-700 font-semibold"
+                >
+                  Choose an uploaded file:
+                </label>
+                <select
+                  id="file-select"
+                  value={selectedFileId}
+                  onChange={(e) => setSelectedFileId(e.target.value)}
+                  className="w-full mb-6 px-3 py-2 border border-green-300 rounded-lg"
+                >
+                  <option value="">-- Select a file --</option>
+                  {files.map(({ _id, originalname }) => (
+                    <option key={_id} value={_id}>
+                      {originalname}
+                    </option>
+                  ))}
+                </select>
 
-          <button
-            onClick={generateInsight}
-            disabled={loadingInsight || !selectedFileId}
-            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-blue-700"
-          >
-            {loadingInsight ? "Generating Insight..." : "Get Insight"}
-          </button>
+                <button
+                  onClick={generateInsight}
+                  disabled={loadingInsight || !selectedFileId}
+                  className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                >
+                  {loadingInsight ? "Generating Insight..." : "Get Insight"}
+                </button>
 
-          {error && <p className="mt-4 text-red-600">{error}</p>}
+                {error && <p className="text-red-600 font-semibold mb-4">{error}</p>}
 
-          {insight && (
-            <section className="mt-6 p-4 bg-gray-50 rounded border border-gray-300">
-              <h3 className="font-semibold mb-2">Insight Summary</h3>
-              <p>{insight}</p>
-            </section>
-          )}
-        </>
-      )}
+                {insight && (
+                  <section className="mt-6 p-4 bg-gray-50 rounded border border-gray-300">
+                    <h3 className="font-semibold mb-2">Insight Summary</h3>
+                    <p>{insight}</p>
+                  </section>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
 
-export default SmartInsightsView;
+export default SmartInsights;

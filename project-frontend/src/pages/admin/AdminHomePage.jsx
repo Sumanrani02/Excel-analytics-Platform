@@ -30,7 +30,7 @@ const modalStyles = {
 export default function AdminHomePage() {
   const {
     user,
-    setUser,
+    logout,
     fetchAllUsers,
     users,
     loading,
@@ -95,12 +95,7 @@ export default function AdminHomePage() {
 
           <NavLink
             to="/login"
-            onClick={() => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("role");
-              localStorage.removeItem("user"); // Clear user details
-              setUser("");
-            }}
+            onClick={() => logout()}
             className="rounded-lg bg-green-100 text-green-600 py-2 px-4 font-medium hover:bg-green-200 focus:ring-2 focus:ring-green-300 focus:ring-offset-1"
           >
             Log Out

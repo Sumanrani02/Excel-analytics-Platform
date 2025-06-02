@@ -9,12 +9,10 @@ const Dashboard = () => {
     recentUploads,
     chartData,
     user,
-    setUser,
+    logout,
     loading,
     fetchDashboardData,
   } = useAuth();
-
-
 
   useEffect(() => {
     fetchDashboardData();
@@ -35,7 +33,6 @@ const Dashboard = () => {
 
   return (
     <div className="flex w-full">
-     
       <div className="p-6 flex-1 bg-green-50 h-screen">
         <div className="flex justify-between items-center rounded-2xl bg-white shadow p-4 mb-5">
           <h1 className="text-2xl text-green-800 font-semibold">
@@ -44,12 +41,7 @@ const Dashboard = () => {
 
           <NavLink
             to="/login"
-            onClick={() => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("role");
-              localStorage.removeItem("user"); // Clear user details
-              setUser("");
-            }}
+            onClick={() => logout()}
             className="rounded-lg bg-green-100 text-green-600 py-2 px-4 font-medium hover:bg-green-200 focus:ring-2 focus:ring-green-300 focus:ring-offset-1"
           >
             Log Out

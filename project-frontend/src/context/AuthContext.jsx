@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
   const [columns, setColumns] = useState([]);
   const [users, setUsers] = useState([]);
   const [insights, setInsights] = useState("");
- 
+
   // Helper to get auth headers
   const authHeader = () => {
     const token = localStorage.getItem("token");
@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }) => {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false);
   }, []);
 
   // Fetch file history on mount
@@ -124,34 +125,40 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-const loginUser = async (data, navigate) => {
-  setMessage("");
-  setError("");
-  try {
-    const response = await axios.post(`${API_BASE_URL}/api/auth/login`, data);
-    const { token, user } = response.data;
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", user.role);
-    localStorage.setItem("user", JSON.stringify({ ...user, token }));  // store with token
+  const loginUser = async (data, navigate) => {
+    setMessage("");
+    setError("");
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, data);
+      const { token, user } = response.data;
 
-    setUser({ ...user, token });  // <-- important
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("user", JSON.stringify({ ...user, token })); // store with token
 
-    if (user.role === "admin") {
-      setMessage("Login successful");
-      navigate("/admin/home");
-    } else {
-      navigate("/dashboard");
-      setMessage("Login successful");
+      setUser({ ...user, token }); // <-- important
+
+      if (user.role === "admin") {
+        setMessage("Login successful");
+        navigate("/admin/home");
+      } else {
+        navigate("/dashboard");
+        setMessage("Login successful");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.msg ||
+          "Invalid email or password. Please try again."
+      );
     }
-  } catch (err) {
-    setError(
-      err.response?.data?.msg ||
-        "Invalid email or password. Please try again."
-    );
-  }
-};
-
+  };
 
   // forgot password
   const forgotPassword = async (email) => {
@@ -169,32 +176,32 @@ const loginUser = async (data, navigate) => {
     }
   };
 
-const resetPassword = async (token, newPassword) => {
-  console.log("resetPassword function called with", { token, newPassword });
-  setLoading(true);
-  setError(null);
-  setMessage(null);
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/auth/reset-password/${token}`,
-      { password: newPassword }
-    );
-    setError(null);  // clear error on success
-    setMessage(response.data.message || "Password reset successful! Redirecting...");
-    return true;
-  } catch (err) {
-    setError(
-      err.response?.data?.message ||
-      "Password reset failed. Please try again."
-    );
+  const resetPassword = async (token, newPassword) => {
+    console.log("resetPassword function called with", { token, newPassword });
+    setLoading(true);
+    setError(null);
     setMessage(null);
-    return false;
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/auth/reset-password/${token}`,
+        { password: newPassword }
+      );
+      setError(null); // clear error on success
+      setMessage(
+        response.data.message || "Password reset successful! Redirecting..."
+      );
+      return true;
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Password reset failed. Please try again."
+      );
+      setMessage(null);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch user data
   const fetchUserData = useCallback(async () => {
@@ -236,16 +243,16 @@ const resetPassword = async (token, newPassword) => {
     }
   };
 
-  const onSubmit = async (formData) => {
-    const { password } = formData;
+  // const onSubmit = async (formData) => {
+  //   const { password } = formData;
 
-    if (!password) {
-      toast.error("Please enter a new password.");
-      return;
-    }
+  //   if (!password) {
+  //     toast.error("Please enter a new password.");
+  //     return;
+  //   }
 
-    await updateUser({ password });
-  };
+  //   await updateUser({ password });
+  // };
 
   // Delete user account
   const deleteAccount = async () => {
@@ -477,14 +484,17 @@ const resetPassword = async (token, newPassword) => {
   };
   // Delete file by admin handler
   const handleDeleteFilebyAdmin = async (userId, fileId) => {
-     console.log("Delete button clicked for file", fileId);
+    console.log("Delete button clicked for file", fileId);
     if (!window.confirm("Are you sure you want to delete this file?")) return;
-     console.log("Confirmed deletion");
+    console.log("Confirmed deletion");
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API_BASE_URL}/api/admin/users/${userId}/delete/${fileId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `${API_BASE_URL}/api/admin/users/${userId}/delete/${fileId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast.success("File deleted successfully");
       setUsers((prev) =>
         prev.map((u) =>
@@ -500,29 +510,21 @@ const resetPassword = async (token, newPassword) => {
   };
 
   //  all users data
-const fetchAllUsers = useCallback(async () => {
-  if (!user?.token) return;
-  try {
-    const res = await axios.get(`${API_BASE_URL}/api/admin/users`, {
-  headers: { Authorization: `Bearer ${user.token}` },
+  const fetchAllUsers = useCallback(async () => {
+    if (!user?.token) return;
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
 
-    });
-
-    console.log("Response from /api/admin/users:", res.data);
-    setUsers(res.data.users); // ✅ CORRECT: Extract 'users' array from the object
-    setError(null);
-  } catch (err) {
-    console.error("Error fetching users:", err.response?.data || err.message);
-    setError("Failed to fetch users");
-  }
-}, [user?.token]);
-
-
-
-
-
-
-
+      console.log("Response from /api/admin/users:", res.data);
+      setUsers(res.data.users); // ✅ CORRECT: Extract 'users' array from the object
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching users:", err.response?.data || err.message);
+      setError("Failed to fetch users");
+    }
+  }, [user?.token]);
 
   const value = {
     files,
@@ -540,6 +542,7 @@ const fetchAllUsers = useCallback(async () => {
     setUser,
     registerUser,
     loginUser,
+    logout,
     forgotPassword,
     resetPassword,
     deleteAccount,
