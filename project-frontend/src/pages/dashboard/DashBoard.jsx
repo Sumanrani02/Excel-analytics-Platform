@@ -31,6 +31,7 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  Filler
 } from "chart.js";
 
 ChartJS.register(
@@ -42,7 +43,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  Filler
 );
 
 const Dashboard = () => {
@@ -50,7 +52,8 @@ const Dashboard = () => {
   const {
     summary,
     recentUploads,
-    chartData, 
+    chartData,
+    uploadTrendData, 
     user,
     handleView, 
     logout,
@@ -177,29 +180,32 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  useEffect(() => {
-    if (
-      chartData &&
-      chartData.labels &&
-      Array.isArray(chartData.successfulUploads) &&
-      Array.isArray(chartData.failedUploads)
-    ) {
-      setLineChartData((prevData) => ({
-        ...prevData, 
-        labels: chartData.labels,
-        datasets: [
-          {
-            ...prevData.datasets[0], 
-            data: chartData.successfulUploads,
-          },
-          {
-            ...prevData.datasets[1], 
-            data: chartData.failedUploads,
-          },
-        ],
-      }));
-    }
-  }, [chartData]); 
+ useEffect(() => {
+  if (
+    uploadTrendData &&
+    Array.isArray(uploadTrendData.labels) &&
+    uploadTrendData.labels.length > 0 &&
+    Array.isArray(uploadTrendData.successfulUploads) &&
+    Array.isArray(uploadTrendData.failedUploads)
+  ) {
+    setLineChartData((prevData) => ({
+      ...prevData,
+      labels: uploadTrendData.labels,
+      datasets: [
+        {
+          ...prevData.datasets[0],
+          data: uploadTrendData.successfulUploads,
+        },
+        {
+          ...prevData.datasets[1],
+          data: uploadTrendData.failedUploads,
+        },
+      ],
+    }));
+  }
+}, [uploadTrendData]);
+
+
 
   const handleRefresh = async () => {
     setRefreshing(true);

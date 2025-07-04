@@ -17,17 +17,26 @@ export const getUser = async (req, res) => {
 // Update user (only password allowed)
 export const updateUser = async (req, res) => {
   try {
-    const { password } = req.body;
-
-    if (!password) {
-      return res.status(400).json({ error: 'Password is required for update' });
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { name, password } = req.body;
 
-    await User.findByIdAndUpdate(req.user.id, { password: hashedPassword });
+    if (name) user.name = name;
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
 
-    res.json({ message: 'Password updated successfully' });
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
   } catch (err) {
     console.error('Update error:', err);
     res.status(500).json({ error: 'Failed to update user' });

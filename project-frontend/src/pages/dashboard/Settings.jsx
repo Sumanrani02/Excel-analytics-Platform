@@ -67,7 +67,6 @@ const Settings = () => {
               <input
                 {...register("name")}
                 type="text"
-                readOnly 
                 className="w-full p-3 border border-green-300 rounded-lg bg-green-50 text-gray-800 cursor-not-allowed
                            focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200"
               />

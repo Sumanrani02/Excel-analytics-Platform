@@ -20,6 +20,7 @@ export const uploadFile = async (req, res) => {
       originalname: req.file.originalname,
       buffer: req.file.buffer,
       data: jsonData,
+      status: "uploaded",
     });
 
     await upload.save();

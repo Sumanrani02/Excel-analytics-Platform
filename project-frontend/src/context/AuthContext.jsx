@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
   const [summary, setSummary] = useState({});
   const [recentUploads, setRecentUploads] = useState([]);
   const [chartData, setChartData] = useState(null);
+  const [uploadTrendData, setUploadTrendData] = useState(null); 
   const [user, setUser] = useState(null);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -79,7 +80,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const [summaryRes, recentUploadsRes, chartDataRes] = await Promise.all([
+      const [summaryRes, recentUploadsRes, chartDataRes, uploadTrendsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/dashboard/summary`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
@@ -89,11 +90,15 @@ export const AuthProvider = ({ children }) => {
         axios.get(`${API_BASE_URL}/api/dashboard/chart-data`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
+         axios.get(`${API_BASE_URL}/api/dashboard/upload-trends`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       setSummary(summaryRes.data);
       setRecentUploads(recentUploadsRes.data);
       setChartData(chartDataRes.data);
+      setUploadTrendData(uploadTrendsRes.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -538,6 +543,7 @@ export const AuthProvider = ({ children }) => {
     summary,
     recentUploads,
     chartData,
+    uploadTrendData, 
     user,
     setUser,
     registerUser,
