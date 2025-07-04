@@ -2,7 +2,7 @@ import React from "react";
 import img from "../../assets/excel-screen.png";
 import logo from "../../assets/web-logo.png";
 import Loginbtn from "../../components/Loginbtn";
-import { NavLink } from "react-router-dom";
+import { Link} from "react-router-dom";
 export default function Home() {
   return (
     <div className="min-h-screen bg-green-50 text-gray-800 font-sans">
@@ -12,12 +12,12 @@ export default function Home() {
           <img src={logo} alt="logo" width={200} />
         </div>
         <div className="flex gap-4">
-          <NavLink to={"/login"}>
+          <Link to={"/login"}>
             <Loginbtn text={"Login"} />
-          </NavLink>
-          <NavLink to={"/register"}>
+          </Link>
+          <Link to={"/register"}>
             <Loginbtn text={"Register"} />
-          </NavLink>
+          </Link>
         </div>
       </header>
 

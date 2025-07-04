@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { User, Mail, Lock, Trash, Watch } from "lucide-react";
+import { User, Mail, Lock, Trash } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const Settings = () => {
@@ -12,82 +12,95 @@ const Settings = () => {
     formState: { errors },
   } = useForm();
 
-// Fetch user if not already fetched
-useEffect(() => {
-  if (!user) {
-    fetchUserData();
-  }
-}, [user, fetchUserData]);
+  // Fetch user if not already fetched (No functional change)
+  useEffect(() => {
+    if (!user) {
+      fetchUserData();
+    }
+  }, [user, fetchUserData]);
 
-// When user is updated, populate form values
-useEffect(() => {
-  if (user) {
-    setValue("name", user.name);
-    setValue("email", user.email);
-  }
-}, [user, setValue]);
+  useEffect(() => {
+    if (user) {
+      setValue("name", user.name || ""); 
+      setValue("email", user.email || ""); 
+    }
+  }, [user, setValue]);
 
 
   const onSubmit = (data) => {
     updateUser(data);
   };
 
+  // Loading state display 
   if (loading) {
-    return <p className="text-center text-gray-500">Loading...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-green-50">
+        <p className="text-center text-gray-600 text-2xl font-medium animate-pulse">
+          Loading Account Settings...
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen p-6 bg-green-100 flex flex-col items-center">
-      <div className="bg-white w-full max-w-5xl p-6 shadow-md rounded-lg flex">
-        {/* Left Section */}
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-green-600 mb-5">
+    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100 flex flex-col items-center">
+      <div className="bg-white w-full max-w-5xl p-6 sm:p-8 shadow-xl rounded-2xl flex flex-col md:flex-row gap-8">
+        {/* Left Section - Account Settings Form */}
+        <div className="flex-1 order-2 md:order-1">
+          <h1 className="text-3xl font-extrabold text-green-700 mb-6 border-b pb-3 border-green-100">
             Account Settings
           </h1>
 
-          <div className="flex mb-6">
-            <div className="bg-green-200 p-4 rounded-full">
-              <User size={48} className="text-green-800" />
+          {/* User Avatar / Icon */}
+          <div className="flex justify-center md:justify-start mb-6">
+            <div className="bg-green-100 p-5 rounded-full shadow-inner">
+              <User size={64} className="text-green-600" />
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Name Field */}
             <div>
-              <label className="text-sm font-medium text-green-700 mb-1 flex items-center">
-                <User className="mr-2" size={16} /> Name:
+              <label className="text-sm sm:text-base font-semibold text-green-800 mb-2 flex items-center">
+                <User className="mr-3 text-green-600" size={18} /> Name:
               </label>
               <input
                 {...register("name")}
                 type="text"
-                readOnly
-                className="w-full p-2 border border-green-300 rounded-lg focus:outline-none focus:ring focus:ring-green-200"
+                readOnly 
+                className="w-full p-3 border border-green-300 rounded-lg bg-green-50 text-gray-800 cursor-not-allowed
+                           focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200"
               />
               {errors.name && (
-                <p className="text-red-500 text-sm">{errors.name.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label className="text-sm font-medium text-green-700 mb-1 flex items-center">
-                <Mail className="mr-2" size={16} /> Email:
+              <label className="text-sm sm:text-base font-semibold text-green-800 mb-2 flex items-center">
+                <Mail className="mr-3 text-green-600" size={18} /> Email:
               </label>
               <input
                 {...register("email")}
                 type="email"
-                readOnly
-                className="w-full p-2 border border-green-300 rounded-lg focus:outline-none focus:ring focus:ring-green-200"
+                readOnly 
+                className="w-full p-3 border border-green-300 rounded-lg bg-green-50 text-gray-800 cursor-not-allowed
+                           focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200"
               />
               {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="text-sm font-medium text-green-700 mb-1 flex items-center">
-                <Lock className="mr-2" size={16} /> New Password:
+              <label className="text-sm sm:text-base font-semibold text-green-800 mb-2 flex items-center">
+                <Lock className="mr-3 text-green-600" size={18} /> New Password:
               </label>
               <input
                 {...register("password", {
@@ -99,10 +112,11 @@ useEffect(() => {
                 })}
                 type="password"
                 placeholder="Enter new password"
-                className="w-full p-2 border border-green-300 rounded-lg focus:outline-none focus:ring focus:ring-green-200"
+                className="w-full p-3 border border-green-300 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200"
               />
               {errors.password && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm mt-1">
                   {errors.password.message}
                 </p>
               )}
@@ -111,44 +125,61 @@ useEffect(() => {
             {/* Save Changes Button */}
             <button
               type="submit"
-              className="mt-6 w-40 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 focus:outline-none"
+              className="w-full md:w-auto px-6 py-3 mt-6 bg-green-600 text-white font-bold rounded-lg shadow-md
+                         hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                         transition duration-250 ease-in-out transform hover:scale-105"
             >
               Save Changes
             </button>
           </form>
 
-          {/* Delete Account Button */}
-          <button
-            onClick={deleteAccount}
-            className="ml-64 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 focus:outline-none"
-          >
-            <Trash className="inline-block mr-2" size={16} /> Delete Account
-          </button>
-          <p className="text-sm text-red-600 mt-2">
-            If you delete your account, you will permanently lose access to your
-            data.
-          </p>
+          {/* Delete Account Section */}
+          <div className="mt-10 pt-6 border-t border-gray-200">
+            <h2 className="text-xl font-semibold text-red-700 mb-4">
+              Danger Zone
+            </h2>
+            <p className="text-sm text-red-600 mb-4">
+              If you delete your account, you will permanently lose access to
+              your data and this action cannot be undone.
+            </p>
+            <button
+              onClick={deleteAccount}
+              className="w-full md:w-auto px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-md
+                         hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+                         transition duration-250 ease-in-out transform hover:scale-105"
+            >
+              <Trash className="inline-block mr-2" size={18} /> Delete Account
+            </button>
+          </div>
         </div>
 
-        {/* Right Section */}
-        <div className="flex-1 pl-6 border-l border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        {/* Right Section - Tips & Notifications */}
+        <div className="flex-1 md:pl-8 md:border-l border-gray-200 order-1 md:order-2">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 border-gray-100">
             Security Tips
           </h2>
-          <ul className="list-disc list-inside text-gray-700">
+          <ul className="list-disc list-inside text-gray-700 space-y-2 text-base">
             <li>
-              Use a strong password with a mix of letters, numbers, and symbols.
+              Use a **strong, unique password** with a mix of letters, numbers,
+              and symbols.
             </li>
-            <li>Regularly update your password to keep your account secure.</li>
-            <li>Enable two-factor authentication if available.</li>
+            <li>
+              Regularly **update your password** to keep your account secure.
+            </li>
+            <li>
+              Enable **two-factor authentication** (2FA) if available for added
+              security.
+            </li>
+            <li>Be cautious of **phishing attempts** and suspicious emails.</li>
           </ul>
 
-          <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
+          <h2 className="text-xl font-semibold text-gray-800 mt-8 mb-4 border-b pb-2 border-gray-100">
             Notifications
           </h2>
-          <p className="text-gray-600">
-            You will receive email updates about changes to your account
-            settings.
+          <p className="text-gray-600 text-base leading-relaxed">
+            You will receive important email updates about changes to your
+            account settings, security alerts, and service announcements. Please
+            ensure your email is up-to-date.
           </p>
         </div>
       </div>

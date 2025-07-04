@@ -1,8 +1,8 @@
-import React from "react";
+import React from 'react';
 
-export const Card = ({ children, className }) => {
+export const Card = ({ children, className = '' }) => {
   return (
-    <div className={`flex h-screen w-screen items-center justify-center bg-green-50 ${className}`}>
+    <div className={`bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-200/50 ${className}`}>
       {children}
     </div>
   );

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { UploadCloud, Trash } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -58,33 +57,38 @@ const UploadFiles = () => {
           <div className="w-full md:w-2/3">
             {newfiles.length > 0 ? (
               <ul className="space-y-4">
-                {newfiles.map((file, index) => (
+                                {newfiles.map((file, index) => (
                   <li
                     key={index}
-                    className="flex justify-between items-center bg-green-50 p-4 rounded-md shadow"
+                    className="flex justify-between items-center bg-green-50 p-5 rounded-lg shadow-sm border border-green-100 hover:shadow-md transition-shadow duration-200" // More padding, subtle shadow and border, hover effect
                   >
                     <div className="flex items-center">
                       {getStatusIcon(file.status)}
                       <div className="ml-4">
-                        <p className="font-semibold text-green-800">
+                        <p className="font-semibold text-green-800 text-lg">
                           {file.name}
                         </p>
-                        <p className="text-sm text-gray-500">{file.size}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleFileRemove(index)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 transition-colors duration-200" // Added padding, rounded, hover background
                     >
-                      <Trash />
+                      <Trash size={20} />
                     </button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-green-500 text-center bg-green-100 p-4 text-xl font-bold rounded-2xl">
-                No files selected.
-              </p>
+               <div className="flex flex-col items-center justify-center h-full min-h-[200px] bg-green-100 p-8 text-center rounded-2xl border-2 border-dashed border-green-300"> {/* Min height for better empty state, dashed border */}
+                
+                <p className="text-green-600 text-2xl font-bold">
+                  No files selected yet!
+                </p>
+                <p className="text-gray-500 mt-2 text-md">
+                  Browse or drag files to start uploading.
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -114,3 +118,6 @@ const UploadFiles = () => {
 };
 
 export default UploadFiles;
+
+
+

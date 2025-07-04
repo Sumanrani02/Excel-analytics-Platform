@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Trash2, User, FileText } from "lucide-react";
+import { Trash2, User, FileText, RefreshCw } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Pie } from "react-chartjs-2";
 import Modal from "react-modal";
-import { NavLink } from "react-router-dom";
 
 Modal.setAppElement("#root");
 
@@ -40,6 +39,7 @@ export default function AdminHomePage() {
   } = useAuth();
 
   const [selectedUser, setSelectedUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user?.role === "admin" && user?.token) {
@@ -85,21 +85,33 @@ export default function AdminHomePage() {
     ],
   };
 
-  return (
-    <div className="min-h-screen p-6 bg-green-100">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center rounded-2xl bg-white shadow p-4 mb-5">
-          <h1 className="text-2xl text-green-800 font-semibold">
-            Welcome Admin !
-          </h1>
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchAllUsers();
+    setTimeout(() => setRefreshing(false), 1000);
+  };
 
-          <NavLink
-            to="/login"
-            onClick={() => logout()}
-            className="rounded-lg bg-green-100 text-green-600 py-2 px-4 font-medium hover:bg-green-200 focus:ring-2 focus:ring-green-300 focus:ring-offset-1"
-          >
-            Log Out
-          </NavLink>
+  return (
+    <div className="flex w-full">
+      <div className="p-6 flex-1 bg-green-50 h-screen">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className=" lg:mb-0">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back, Admin! 👋
+              </h1>
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
+          </div>
         </div>
         {loading && (
           <div className="text-center text-green-600 font-medium">

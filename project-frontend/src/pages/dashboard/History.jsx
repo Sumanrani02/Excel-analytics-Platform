@@ -1,5 +1,4 @@
-import { Download, Eye, Trash } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Eye, Trash } from "lucide-react";
 import Visualize from "./Visualize";
 import { useAuth } from "../../context/AuthContext";
 
@@ -10,88 +9,98 @@ const History = () => {
     loading,
     handleSearch,
     handleView,
-  handleDeletefile,
+    handleDeletefile,
     getStatusIcon,
   } = useAuth();
 
   return (
-    <div className="min-h-screen p-6 bg-green-100">
-      <div className="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold text-green-600 mb-4">File History</h1>
+    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100">
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg max-w-6xl mx-auto">
+        <h1 className="text-3xl font-extrabold text-green-700 mb-6 text-center">
+          File History
+        </h1>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
           <input
             type="text"
             value={searchQuery}
             onChange={handleSearch}
-            placeholder="Search files..."
-            className="px-4 py-2 border border-green-300 rounded-md w-full md:w-1/2"
+            placeholder="Search files by name..."
+            className="px-5 py-3 border border-green-300 rounded-lg w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-200 ease-in-out"
           />
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-screen bg-green-100">
-            <p className="text-center text-gray-500 text-2xl">
+          <div className="flex items-center justify-center min-h-[40vh]">
+            <p className="text-center text-gray-600 text-2xl font-medium animate-pulse">
               Loading File History...
             </p>
           </div>
         ) : filteredFiles.length > 0 ? (
-          <table className="table-auto w-full border-collapse border border-green-300">
-            <thead className="bg-green-100">
-              <tr>
-                <th className="border border-green-300 px-4 py-2 text-green-500">
-                  File Name
-                </th>
-                <th className="border border-green-300 px-4 py-2 text-green-500">
-                  Rows
-                </th>
-                <th className="border border-green-300 px-4 py-2 text-green-500">
-                  Status
-                </th>
-                <th className="border border-green-300 px-4 py-2 text-green-500">
-                  Uploaded At
-                </th>
-                <th className="border border-green-300 px-4 py-2 text-green-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredFiles.map((file) => (
-                <tr key={file._id} className="text-gray-700">
-                  <td className="border border-green-300 px-4 py-2">
-                    {file.originalname}
-                  </td>
-                  <td className="border border-green-300 px-4 py-2">
-                    {file.data.length}
-                  </td>
-                  <td className="border border-green-300 px-4 py-2">
-                    {getStatusIcon("uploaded")}
-                  </td>
-                  <td className="border border-green-300 px-4 py-2">
-                    {new Date(file.createdAt).toLocaleString()}
-                  </td>
-                  <td className="border border-green-300 px-4 py-2 flex justify-center gap-4">
-                    <button
-                      onClick={() => handleView(file._id)}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <Eye />
-                    </button>
-                    <button
-                      onClick={() => handleDeletefile(file._id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto rounded-lg shadow-md border border-green-200">
+            <table className="min-w-full divide-y divide-green-200">
+              <thead className="bg-green-50">
+                <tr>
+                  <th className="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">
+                    File Name
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden sm:table-cell">
+                    Rows
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden sm:table-cell">
+                    Status
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden md:table-cell">
+                    Uploaded At
+                  </th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold text-green-600 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-green-100">
+                {filteredFiles.map((file) => (
+                  <tr key={file._id} className="hover:bg-green-50 transition-colors duration-150 ease-in-out">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {file.originalname}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 hidden sm:table-cell">
+                      {file.data.length}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 hidden sm:table-cell">
+                      {getStatusIcon("uploaded")}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 hidden md:table-cell">
+                      {new Date(file.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-center text-sm font-medium">
+                      <div className="flex justify-center items-center gap-2">
+                        <button
+                          onClick={() => handleView(file._id)}
+                          className="p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-700 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          title="View File"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeletefile(file._id)}
+                          className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 hover:text-red-700 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-400"
+                          title="Delete File"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <div className="flex items-center justify-center h-screen bg-green-100">
-            <p className="text-center text-gray-500 text-2xl">No Files Found</p>
+          <div className="flex items-center justify-center min-h-[40vh]">
+            <p className="text-center text-gray-500 text-2xl font-medium">
+              No Files Found. Upload a file to see its history!
+            </p>
           </div>
         )}
       </div>
