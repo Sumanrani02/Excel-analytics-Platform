@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "../pages/auth/Home";
 import Login from "../pages/auth/Login";
@@ -16,27 +16,41 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 
 const RoutesPath = () => {
+
   const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const noSidebarRoutes = ["/", "/login", "/register", "/forgot-password"];
   const isNoSidebarRoute =
     noSidebarRoutes.includes(location.pathname) ||
     location.pathname.match(/^\/reset-password\/.+/);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarCollapsed(window.innerWidth < 640);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const getMainContentMargin = () => {
+    if (isNoSidebarRoute) return "ml-0";
+    return sidebarCollapsed ? "ml-20" : "ml-64";
+  };
+
   return (
-    <div className="flex w-full">
-      {!isNoSidebarRoute && (
-        <div className="w-1/5">
-          <SideBar />
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50">
+      {/* Render Sidebar */}
+      {!isNoSidebarRoute && <SideBar />}
 
       {/* Main content */}
       <div
-        className={`${
-          noSidebarRoutes.includes(location.pathname)
-            ? "w-full"
-            : "w-4/5 ml-1/5"
-        }`}
+        className={`
+          transition-all duration-300 ease-in-out min-h-screen
+          ${getMainContentMargin()}
+        `}
       >
         <Routes>
           {/* Public Routes */}

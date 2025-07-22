@@ -214,7 +214,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full max-w-7xl">
       <div className="p-6 flex-1 bg-green-50 h-screen">
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
